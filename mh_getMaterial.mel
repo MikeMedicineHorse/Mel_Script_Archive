@@ -1,0 +1,24 @@
+/**********************************************************************************************
+Procedure: mh_getMaterial()
+Version: 1.0
+Date: 05-13-17
+Description: This procedure will take the selected objects and get the meterials in the hypershade
+**********************************************************************************************/
+
+global proc mh_getMaterial()
+{
+	//grab the user selection 
+	string $userSelection[] = `ls -sl` ; 
+	
+	$size = `size ($userSelection)` ;
+	
+	if ($size == 0){
+		error "Please select an object or objects";
+	}
+
+	hyperShadePanelGraphCommand("hyperShadePanel1", "graphMaterials");
+	
+	print "materials have been obtained captain.\r";
+}
+
+

@@ -1,0 +1,20 @@
+/**********************************************************************************************
+Procedure: mh_centerToObject()
+Version: 2.0
+Date: 05-04-09
+Description: This procedure snaps the last selected object to the center of the objects selected
+**********************************************************************************************/
+
+global proc mh_centerToObject()
+{
+	//store the selected group for future use
+	string $selection[] = `ls -sl` ;
+	
+	//create the constraints to snap the object's position and rotation
+	string $pointConst[] = `pointConstraint -offset 0 0 0 -weight 1 -n pointConst_00` ;
+	string $orientConst[] = `orientConstraint -offset 0 0 0 -weight 1 -n orientConst_00` ;
+	
+	//delete the constraints
+	delete $pointConst ;
+	delete $orientConst ;	
+}

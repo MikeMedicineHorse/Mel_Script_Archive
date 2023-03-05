@@ -1,0 +1,61 @@
+/**********************************************************************************************
+Procedure: mh_createCameraTarget)
+Version: 1.0
+Date: 05-11-09
+Description: This procedure creates a simple targeted camera.
+**********************************************************************************************/
+
+
+global proc mh_createCameraTarget()
+{
+	//user selection
+	string $userSelection[] = `ls -sl` ;
+	
+	//remember to make rotates non keyable
+	
+	$newCamera = `camera 
+					-centerOfInterest 5 
+					-focalLength 35 
+					-lensSqueezeRatio 1 
+					-cameraScale 1 
+					-horizontalFilmAperture 1.41732 
+					-horizontalFilmOffset 0 
+					-verticalFilmAperture 0.94488 
+					-verticalFilmOffset 0 
+					-filmFit Fill 
+					-overscan 1 
+					-motionBlur 0 
+					-shutterAngle 144 
+					-nearClipPlane 0.01 
+					-farClipPlane 1000 
+					-orthographic 0 
+					-orthographicWidth 30
+					-n med_camTgt_00 ` ;
+					
+	setAttr ($newCamera[0] + ".translateZ") 10 ;
+	setAttr -keyable false -channelBox true ($newCamera[0] + ".rx");
+	setAttr -keyable false -channelBox true ($newCamera[0] + ".ry");
+	setAttr -keyable false -channelBox true ($newCamera[0] + ".rz");
+	
+	$targetLocator = `spaceLocator -n ($newCamera[0] + "_targetLocator")` ;
+	
+	select -r $targetLocator ; 
+	select -add $newCamera[0] ; 
+	
+	string $aimConst[] = `aimConstraint -offset 0 0 0 -weight 1 -aimVector 0 0 -1 -upVector 0 1 0 ` ;
+	
+	$cameraGroup = `group -em -n ($newCamera[0] + "_grp_00")` ;
+	
+	select -r $newCamera[0] ; 
+	select -add $targetLocator ; 
+	select -add $cameraGroup ; 
+	
+	parent ; 
+
+	select -r $userSelection ;
+	
+}
+	
+	
+	
+	

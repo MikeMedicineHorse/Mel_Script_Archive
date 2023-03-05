@@ -1,0 +1,29 @@
+/**********************************************************************************************
+Procedure: mh_simpleScene()
+Version: 3.0
+Date: 12-10-09
+Description: This procedure will setup a basic MR hires render
+**********************************************************************************************/
+
+
+global proc mh_simpleScene()
+{
+	string $sphere[] = `polySphere` ; 
+	string $plane[] = `polyPlane` ;
+	string $torus[] = `polyTorus` ;
+	string $cylinder[] = `polyCylinder` ; 
+	string $cube[] = `polyCube` ; 
+	string $cone[] = `polyCone` ;
+	setAttr ($plane[1] + ".height") 12 ; 
+	setAttr ($plane[1] + ".width") 12 ; 
+	setAttr ($cube[0] + ".translateX") -2 ;
+	setAttr ($cylinder[0] + ".translateX") 2 ;
+	setAttr ($cone[0] + ".translateX") 4 ;
+	setAttr ($cone[0] + ".translateY") 1 ;
+	setAttr ($sphere[0] + ".translateY") 1 ;
+	setAttr ($cube[0] + ".translateY") .5 ;
+	setAttr ($cylinder[0] + ".translateY") 1 ;
+	setAttr ($torus[0] + ".translateX") -4 ;
+	setAttr ($torus[0] + ".translateY") .5 ;
+	mh_createAreaLightTgt ;
+}

@@ -1,0 +1,27 @@
+/**********************************************************************************************
+Procedure: mh_hardenEdge()
+Version: 1.0
+Date: 05-13-09
+Description: This procedure will take the selected objects and soften the normals
+**********************************************************************************************/
+
+global proc mh_hardenEdge()
+{
+	//grab the user selection 
+	string $userSelection[] = `ls -sl` ; 
+	
+	$size = `size ($userSelection)` ;
+	
+	if ($size == 0){
+		error "Please select an object or objects";
+	}
+
+	//loop through the layers bypassing the first one and delete them
+	for ($i = 0; $i < size ($userSelection); $i++){
+		polySoftEdge -a 0 -ch 0 $userSelection[$i];
+	}
+	
+	print "All edges softened.\r";
+}
+
+

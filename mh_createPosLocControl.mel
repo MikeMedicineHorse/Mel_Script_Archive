@@ -1,0 +1,71 @@
+/**********************************************************************************************
+Procedure: mh_createGroupControl()
+Version: 2.0
+Date: 04-10-09
+Description: This procedure creates a group then parents the selected object to it
+**********************************************************************************************/
+
+global proc mh_createPosLocControl()
+{
+	//store the selected group for future use
+	
+
+	
+	//if more than one obj selected error out.
+	//if (size($selectedGrp) > 1)
+    //           error ("Please select only one goup node.\n");
+    
+    //filter out the transforms of the current selection
+    
+    
+    
+    string $sel[] = `ls -selection`;
+    string $nulls[];
+    string $parent[] ;
+    
+    for($node in $sel) 
+    {
+        string $null[];
+        string $nullgrps[];
+        vector $v;
+        
+        int $n = size($sel);
+        
+        string $parent[] = `listRelatives -p ($node)` ;
+        
+        $null = `spaceLocator -absolute -position 0 0 0 -name ($node + "_loc")`;
+        
+        select $node ;
+	    select -add $null ;
+	    
+	    //create the constraints to snap the object's position and rotation
+		string $pointConst[] = `pointConstraint -offset 0 0 0 -weight 1 -n pointConst_00` ;
+		//string $orientConst[] = `orientConstraint -offset 0 0 0 -weight 1 -n orientConst_00` ;
+		
+		//delete the constraints
+		delete $pointConst ;
+		//delete $orientConst ;
+		
+		//parent loc to parent if exists
+		select -cl ; 
+		select $node  ; 
+		
+		if(size(listRelatives("-parent"))){
+			select -cl ; 
+			select $null ;
+			select -add $parent ;
+	 		parent ; 
+	 		select -cl ; 
+	 		
+			}
+		
+		//parent obj to loc
+		select -cl ; 
+		select $node  ; 
+	 	select -add $null ; 	
+	 	parent ; 
+	 	select -cl ; 
+ 	}
+	 	
+
+}

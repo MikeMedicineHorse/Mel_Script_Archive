@@ -1,0 +1,20 @@
+/**********************************************************************************************
+Procedure: mh_smartGroup()
+Version: 1.0
+Date: 04-10-09
+Description: This procedure fixes the RP of a grp so the channel box attrs are based on world space
+**********************************************************************************************/
+
+global proc mh_smartGroup()
+{
+	//store the selection for future use--if needed
+	
+	string $userSelection[] = `ls -sl` ;
+	
+	//create a group dynamically ;
+	
+	string $smartGroup = `group -n smartGroup_00` ; 
+	
+	mh_fixGroupPivot ; 
+		
+}

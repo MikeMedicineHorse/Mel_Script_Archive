@@ -1,0 +1,125 @@
+/**********************************************************************************************
+Procedure: mh_renderSubdiv()
+Version: 1.0
+Date: 08-10-10
+Description: This procedure sets the display/render subdiv attr
+**********************************************************************************************/
+
+global proc mh_renderSubdiv()
+{
+
+	//ititialize the window name variable
+	$win = "mhsubdivWindow";
+	
+	//check to see if the window or prefs exist then delete if so
+	if (`window -exists $win`)
+        deleteUI $win;
+        
+	if (`windowPref -exists $win`){
+			windowPref -remove $win ;
+	}   
+
+	window
+		-wh 225 200
+		-title "Set MR Subdiv Levels"
+		-minimizeButton 0
+		-maximizeButton 0
+		-rtf true 
+		-s 1
+		$win ;
+
+	string $mainSubdivColumn = `columnLayout
+					-columnAttach "both" 5
+					-rowSpacing 10
+					-columnWidth 225` ;
+
+	text -label "Select objects for the script to affect" ;
+
+	separator -style "in" ;
+
+		//rowLayout for the channel control buttons
+		string $editorRow = `rowLayout -nc 2 -cw2 150 75` ;
+
+		//setup the text field for a variable
+		text -label "Preview Division Levels" ;
+
+		//setup the text field for a variable
+		$editorMin = `textField -w 55 `;
+
+		//set the default value to 4 divisions
+		textField -edit -tx "0" $editorMin ;
+
+		setParent ..;
+
+		//rowLayout for the channel control buttons
+		string $renderRow = `rowLayout -nc 2 -cw2 150 75` ;
+
+		//setup the text field for a variable
+		text -label "Render Division Levels" ;
+
+		//setup the text field for a variable
+		$renderMin = `textField -w 55`;
+
+		//set the default value to 4 divisions
+		textField -edit -tx "3" $renderMin ;
+
+		setParent ..;
+
+	separator -style "in" ; 
+
+	button 
+		-label "Set Subdiv Levels"
+		-command ("mh_subdivButton " + " " + $editorMin + " " + $renderMin)
+		-annotation "Sets the subdiv levels on the selected objects" ; 
+
+
+	setParent ..;
+
+	
+
+	showWindow $win ;
+
+}
+
+global proc mh_subdivButton(string $editorMin, string $renderMin)
+{	
+	//this proc converts the button command text to integer variables
+	//which goes onto the actual command
+	int $editor = `textField -q -tx $editorMin`;
+	
+	int $render = `textField -q -tx $renderMin`;
+	
+	mh_setSubdivLevels $editor $render ;
+	
+}
+
+global proc mh_setSubdivLevels(int $editor, int $render){
+
+	string $userSelection[] = `ls -sl`;
+	string $shapes[];
+	$shapes = $userSelection;
+	$shapes = `listRelatives -shapes $userSelection`;
+
+	if ((size ($userSelection) == 0)){
+		error "please select an object" ; 
+	}
+
+	for ($i = 0; $i < size ($shapes); $i++){
+		displaySmoothness -divisionsU 3 -divisionsV 3 -pointsWire 16 -pointsShaded 4 -polygonObject 3;
+		subdivDisplaySmoothness -smoothness 3;
+
+		if (`attributeExists "smoothLevel" $shapes[$i]`) {
+			setAttr ($shapes[$i] + ".smoothLevel") $editor;
+		}
+
+		if (`attributeExists "useSmoothPreviewForRender" $shapes[$i]`) {
+			setAttr ($shapes[$i] + ".useSmoothPreviewForRender") 0;
+		}
+
+		if (`attributeExists "renderSmoothLevel" $shapes[$i]`) {
+			setAttr ($shapes[$i] + ".renderSmoothLevel") $render;
+		}	  	
+	}
+
+	print ("Subdiv levels set to Preview : " + $editor + " Render : " + $render + "\r") ;
+}

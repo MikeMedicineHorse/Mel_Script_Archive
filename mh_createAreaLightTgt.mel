@@ -1,0 +1,52 @@
+/**********************************************************************************************
+Procedure: mh_createAreaLightTgt()
+Version: 1.0
+Date: 05-07-09
+Description: This procedure will create a MR physical spotlight...good stuff
+**********************************************************************************************/
+
+global proc mh_createAreaLightTgt()
+{
+	//create the necessary nodes...
+	string $areaLight = `shadingNode -asLight areaLight` ;
+	string $areaLight = `rename $areaLight medAreaLight_00` ;
+	
+	//Here I am setting the default attrs to make it pretty
+	setAttr ($areaLight + ".intensity") 75;
+	setAttr ($areaLight + ".decayRate") 2;
+	setAttr ($areaLight + ".useRayTraceShadows") 1;
+	setAttr ($areaLight + ".shadowRays") 4;
+	setAttr ($areaLight + ".rayDepthLimit") 2;
+	setAttr ($areaLight + ".areaLight") 1;
+	setAttr ($areaLight + ".areaType") 0;
+	setAttr ($areaLight + ".areaHiSamples") 16;
+	setAttr ($areaLight + ".areaHiSampleLimit") 2;
+	setAttr ($areaLight + ".areaLoSamples") 4;
+	
+	//Below I am selecting the final transform and hooking up
+	//some custom attrs for good form
+	
+	select -r  $areaLight ;
+	
+	addAttr -ln "lightIntensity"  -at double -dv 250 ; 
+	setAttr -e-keyable true ($areaLight + ".lightIntensity") ;
+	connectAttr -f ($areaLight + ".lightIntensity") ($areaLight + ".intensity") ;
+	
+	//Now we create the locator for making the aim constraint
+	string $locator[] = `spaceLocator -p 0 0 0 -n physAimLoc_00` ;
+	
+	select -r $locator ;
+	select -add $areaLight ; 
+	
+	string $aimConst[] = `aimConstraint -offset 0 0 0 -weight 1 -aimVector 0 0 -1 -upVector 0 1 0 -worldUpType "none" -n physAimConst_00` ;
+	
+	//setAttr ($medLight[] + ".translateX") -10 ;  error here need to figure out for version 2.0
+	//setAttr ($medLight[] + ".translateY") 10 ;
+	//setAttr ($medLight[] + ".translateZ") 10 ;
+	
+	select -r $areaLight ;
+	
+	move -r -10 10 10 ;
+		
+}
+

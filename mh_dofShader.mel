@@ -1,0 +1,326 @@
+/**********************************************************************************************
+Procedure: mh_dofShader()
+Date: 01-23-09
+Description: This procedure will setup a 3D gradient layer
+**********************************************************************************************/
+
+global proc mh_dofShader()
+{
+	//first we grab the current view camera
+	//declare the variable
+	string $viewCamera;
+
+	// First get the panel that currently has focus
+	string $panel = `getPanel -wf`;
+
+	// Compare the panel's type to confirm it is a "modelPanel"
+	if ( "modelPanel" == `getPanel -to $panel` ){
+		// Get the name of the camera using the ‘modelEditor’ command
+		$viewCamera = `modelEditor -q -camera $panel`;
+  	}else{
+	  	error "please have view panel active" ;
+  	}
+	
+	//store the user selection to restore later
+	string $userSelection[] = `ls -sl`;
+	
+	//store all the cameras--can't remember why
+	string $allCameras[] = `ls -ca`;
+	
+	//V2.0 Edit
+	//Retain current layer for animator
+	string $userCurrentLayer = `editRenderLayerGlobals -q -currentRenderLayer`;
+	//V2.0 end
+	
+	//create rear DOF render layer 	
+	
+	//create layer with -global flag which adds all objects--even future ones
+	$gradientLayer = `createRenderLayer -g -n GradeLayer`;
+		
+	//add the reardof render name as an override
+	editRenderLayerGlobals -currentRenderLayer $gradientLayer;
+	//editRenderLayerAdjustment "defaultRenderGlobals.imageFilePrefix";
+	//setAttr -type "string" defaultRenderGlobals.imageFilePrefix $gradientLayer;
+		
+	//apply the maya software renderer as an overide
+	//editRenderLayerAdjustment "defaultRenderGlobals.currentRenderer";
+	//string $renderer = "mayaSoftware" ;
+	//setAttr "defaultRenderGlobals.currentRenderer" -type "string" $renderer ;
+		
+	//turn on High Quality
+	//setAttr defaultRenderQuality.edgeAntiAliasing 1;
+		
+	//set filter to Gaussian and widthXY to 3
+	//setAttr "defaultRenderQuality.pixelFilterType" 4;
+	//setAttr "defaultRenderQuality.pixelFilterWidthX" 3;
+	//setAttr "defaultRenderQuality.pixelFilterWidthY" 3;
+		
+	//apply production quality settings
+	//setAttr "defaultRenderQuality.shadingSamples" 2;
+	//setAttr "defaultRenderQuality.maxShadingSamples" 8;
+	//setAttr "defaultRenderQuality.redThreshold" 0.4;
+	//setAttr "defaultRenderQuality.greenThreshold" 0.3;
+	//setAttr "defaultRenderQuality.blueThreshold" 0.6;
+		
+	//V2.0 EDIT here
+	for ($i = 0; $i < size ($allCameras); $i++){
+		editRenderLayerAdjustment ($allCameras[$i] + ".backgroundColor");
+		setAttr ($allCameras[$i] + ".backgroundColor") -type double3 1 1 1 ;
+		}		
+	//END V2.0 EDIT
+		
+	//Turn on render all layers from the layering menu
+	//optionVar -intValue renderViewRenderAllLayers 1;
+	
+	//Turn renderlayer options to "keep layers"
+	//optionVar -intValue renderViewRenderLayersMode 2;	
+
+	
+	//grab just the scene file name
+	
+	string $fileName = `file -q -sceneName`;
+	string $filepart = match( "[^/\\]*$", $fileName );
+	string $ext = fileExtension($filepart);
+	$ext  = "." + $ext;
+	string $justFileName = substring($filepart,  1, size($filepart) - size($ext));
+		
+	//create rearDof shading network 
+	$reardofSampler = `createNode samplerInfo -n rearDOF_samplerinfo_00` ;
+	
+	$reardofMultiply = `createNode multiplyDivide -n rearDOF_multiplyDivide_00` ;
+	setAttr ($reardofMultiply + ".input2X") -1;
+	
+	$reardofRange = `createNode setRange -n rearDOF_setRange_00` ;
+	
+	//V2.0 Edit to swap black for white
+	setAttr ($reardofRange + ".minX") 0 ;
+	setAttr ($reardofRange + ".maxX") 1 ;
+	//v2.0 end edit
+	
+	$reardofNegate = `createNode multiplyDivide -n rearDOF_negate_00` ;
+	setAttr ($reardofNegate + ".input2X") -1 ;
+	
+	$targetdofNegate = `createNode multiplyDivide -n targetDOF_negate_00` ;
+	setAttr ($targetdofNegate + ".input2X") -1 ;
+		
+	print "\nRearDOF nodes created successfully.\r";
+	
+	//create rearDOF shader
+	$reardofShader = `shadingNode -asShader surfaceShader -n rearDOF_surfaceShader_00` ;
+	$reardofSG = `sets -renderable true -noSurfaceShader true -empty -name ($reardofShader + "_SG")` ;
+	connectAttr -f ($reardofShader + ".outColor") ($reardofSG + ".surfaceShader") ;
+	print "RearDOF_surfaceShader created successfully.\r";
+	
+	//create lambert trans shader
+	$lambShader = `shadingNode -asShader lambert -n lambert_trans_00` ;
+	$lambSG = `sets -renderable true -noSurfaceShader true -empty -name ($lambShader + "_SG")` ;
+	connectAttr -f ($lambShader + ".outColor") ($lambSG + ".surfaceShader") ;
+	print "lambert shader created successfully.\r";
+	setAttr ($lambShader + ".transparency") -type double3 0.5 0.5 0.5 ;
+		
+	//make node connections regardless of dof planes
+		
+	connectAttr -f ($reardofNegate + ".outputX") ($reardofRange + ".oldMaxX") ;
+	connectAttr -f ($targetdofNegate + ".outputX") ($reardofRange + ".oldMinX") ;
+	connectAttr -f ($reardofSampler + ".pointCameraZ") ($reardofMultiply + ".input1X") ;
+	connectAttr -f ($reardofMultiply + ".outputX") ($reardofRange + ".valueX") ;
+	connectAttr -f ($reardofRange + ".outValueX") ($reardofShader + ".outColorB") ;
+	connectAttr -f ($reardofRange + ".outValueX") ($reardofShader + ".outColorG") ;
+	connectAttr -f ($reardofRange + ".outValueX") ($reardofShader + ".outColorR") ;
+	
+	//create the dof locators
+	$startLocator = `spaceLocator -n ($gradientLayer + "_start_loc_00")` ;
+	$endLocator = `spaceLocator -n ($gradientLayer + "_end_loc_00")` ;
+	
+	select -r $viewCamera ;
+	pickWalk -d up ;
+	select -add $startLocator ;
+	mh_centerToObject ;
+	
+	select -r $viewCamera ; 
+	pickWalk -d up ; 
+	select -add $endLocator ; 
+	mh_centerToObject ;
+	
+	select -r $startLocator ;
+	select -add $endLocator ; 
+	select -add $viewCamera ; 
+	pickWalk -d up ;
+	parent ;
+	
+	editRenderLayerGlobals -currentRenderLayer defaultRenderLayer;
+	$startPlane = `polyPlane -axis 0 0 1 -w 50 -h 50 -n ($gradientLayer + "_startPlane_00")` ;
+	select -r $startPlane[0] ; 
+	string $startShape[] = `pickWalk -d down` ; 
+	setAttr ($startShape[0] + ".primaryVisibility") 0;
+	select -r $startPlane[0] ; 
+	sets -e -forceElement $lambSG;
+	
+	$endPlane = `polyPlane -axis 0 0 1 -w 50 -h 50 -n ($gradientLayer + "_endPlane_00")` ;
+	select -r $endPlane[0] ; 
+	string $endShape[] = `pickWalk -d down` ; 
+	setAttr ($endShape[0] + ".primaryVisibility") 0;
+	select -r $endPlane[0] ;
+	sets -e -forceElement $lambSG;
+	
+	editRenderLayerGlobals -currentRenderLayer $gradientLayer;		
+	
+	setAttr ($startLocator[0] + ".translateZ") -4;
+	setAttr ($endLocator[0] + ".translateZ") -15;
+	
+	select -r $startLocator ; 
+	select -add $startPlane[0] ;
+	mh_centerToObject ;
+	
+	select -r $endLocator ; 
+	select -add $endPlane[0] ; 
+	mh_centerToObject ;
+	
+	select -r $startPlane[0] ; 
+	select -add $viewCamera ; 
+	parent ;
+
+	setAttr -lock true -keyable false ($startPlane[0] + ".tx");
+	setAttr -lock true -keyable false ($startPlane[0] + ".ty");
+	setAttr -lock true -keyable false ($startPlane[0] + ".rx");
+	setAttr -lock true -keyable false ($startPlane[0] + ".ry");
+	setAttr -lock true -keyable false ($startPlane[0] + ".rz");
+	setAttr -lock false -keyable false ($startPlane[0] + ".sx");
+	setAttr -lock false -keyable false ($startPlane[0] + ".sy");
+	setAttr -lock false -keyable false ($startPlane[0] + ".sz");
+	setAttr -lock false -keyable false ($startPlane[0] + ".v");
+	
+	select -r $endPlane[0] ; 
+	select -add $viewCamera ; 
+	parent ; 
+
+	setAttr -lock true -keyable false ($endPlane[0] + ".tx");
+	setAttr -lock true -keyable false ($endPlane[0] + ".ty");
+	setAttr -lock true -keyable false ($startPlane[0] + ".rx");
+	setAttr -lock true -keyable false ($startPlane[0] + ".ry");
+	setAttr -lock true -keyable false ($startPlane[0] + ".rz");
+	setAttr -lock false -keyable false ($endPlane[0] + ".sx");
+	setAttr -lock false -keyable false ($endPlane[0] + ".sy");
+	setAttr -lock false -keyable false ($endPlane[0] + ".sz");
+	setAttr -lock false -keyable false ($endPlane[0] + ".v");
+
+	delete $startLocator ; 
+	delete $endLocator ; 
+
+		
+	//hook up dof planes for renderin
+	connectAttr -f ($endPlane[0] + ".tz") ($reardofNegate + ".input1X") ;
+	connectAttr -f ($startPlane[0] + ".tz") ($targetdofNegate + ".input1X") ;
+
+	//Version 3.0 Edit-->Create materials as a layer override rather than per object
+	connectAttr -f ($reardofSG +".message") ($gradientLayer +".shadingGroupOverride");
+
+	//set AA and/or create mentalRayGlobals if not already created
+	if (`objExists mentalrayGlobals`){		
+		editRenderLayerAdjustment "miDefaultOptions.finalGather" ;
+		setAttr "miDefaultOptions.finalGather" 0 ;
+				
+		//turn on raytracing as overide so AO calculates
+		editRenderLayerAdjustment "miDefaultOptions.rayTracing";
+		setAttr "miDefaultOptions.rayTracing" 1;
+					
+		editRenderLayerAdjustment "miDefaultOptions.minSamples";
+		setAttr "miDefaultOptions.minSamples" 0;
+					
+		editRenderLayerAdjustment "miDefaultOptions.maxSamples";
+		setAttr "miDefaultOptions.maxSamples" 2;
+			
+		editRenderLayerAdjustment "miDefaultOptions.filter";
+		setAttr miDefaultOptions.filter 3;
+			
+		setAttr "miDefaultOptions.jitter" 1;	
+	}else{
+		
+		unifiedRenderGlobalsWindow;
+		
+	
+		if ( `window -exists unifiedRenderGlobalsWindow` && `window -query -visible unifiedRenderGlobalsWindow` ){
+			   print "globals window open\n" ; 
+		   }else{
+			   error "Please open the render globals window first\n"; 
+		   }
+
+		//initialize the mental ray variables
+		string $tabLayoutName = "mentalRayTabLayout" ;
+		string $qualityTab = "mentalRayQualityTab" ;
+		int $selectedTab = `tabLayout -q -sti $tabLayoutName`;
+		string $tabNames[] = `tabLayout -q -ca $tabLayoutName`;
+		int $targetTab ;
+
+		//grab the current tab for user replace later
+		int $currentIndex = `tabLayout -q -sti $tabLayoutName`;
+		
+		//set Mental Ray as primary renderer
+		string $renderercurrent = `getAttr defaultRenderGlobals.currentRenderer` ;
+		string $mentalRay = "mentalRay" ;
+		if ($renderercurrent != $mentalRay)
+		{
+			setAttr "defaultRenderGlobals.currentRenderer" -type "string" $mentalRay ;
+		}
+
+		//Mental ray quality tab grabber 2010
+		for ($i = 0; $i < size ($tabNames); $i++){
+			if ($tabNames[$i] == $qualityTab){
+				$targetTab = $i ;
+				}
+		}	
+
+		if (`objExists mentalrayGlobals`){
+			print "mentalRay globals exist" ;
+		}else{
+			//hack to switch render globals frame to the quality tab forcing the MR nodes to be built
+			tabLayout -e -sti $targetTab $tabLayoutName;
+		}
+
+		//set the AA settings are nodes are created
+		editRenderLayerAdjustment "miDefaultOptions.finalGather" ;
+		setAttr "miDefaultOptions.finalGather" 0 ;
+				
+		//turn on raytracing as overide so AO calculates
+		editRenderLayerAdjustment "miDefaultOptions.rayTracing";
+		setAttr "miDefaultOptions.rayTracing" 1;
+					
+		editRenderLayerAdjustment "miDefaultOptions.minSamples";
+		setAttr "miDefaultOptions.minSamples" 0;
+					
+		editRenderLayerAdjustment "miDefaultOptions.maxSamples";
+		setAttr "miDefaultOptions.maxSamples" 2;
+			
+		editRenderLayerAdjustment "miDefaultOptions.filter";
+		setAttr miDefaultOptions.filter 3;
+			
+		setAttr "miDefaultOptions.jitter" 1;
+		
+		//close da window
+		window -e -vis 0 unifiedRenderGlobalsWindow;
+
+	}
+	
+	/*
+	//selects all shading groups and assigns OB_black shader		
+	string $shadingGroups[] = `ls -type "shadingEngine"` ;
+		
+	for ($i = 0; $i < size ($shadingGroups); $i++){
+		$shadingGroupSets = `sets -q $shadingGroups[$i]` ;
+		select -r $shadingGroupSets ;
+		sets -e -forceElement $reardofSG;
+		select -cl ;
+	}
+	*/
+		
+	//replace the user selection for good form
+	select -replace $userSelection;
+		
+	//V2.0 Edit
+	editRenderLayerGlobals -currentRenderLayer $userCurrentLayer;
+	//V2.0 End Edit
+		
+	print "Gradient pass created successfully!\r";		
+}
+
+

@@ -1,0 +1,194 @@
+/**********************************************************************************************
+Procedure: mh_RenderUI()
+Version: 2.0
+Date: 05-07-09
+Description: This procedure creates the UI for driving all of the rendering scripts
+**********************************************************************************************/
+
+
+global proc mh_RenderUI()
+{
+	
+	if (`window -exists medRenderWindow`){
+		deleteUI -window medRenderWindow;		
+	}
+	
+	if (`windowPref -exists medRenderWindow`){
+			windowPref -remove medRenderWindow;
+	}
+	
+	source "mh_wildcardSel.mel";
+	
+	mh_medMenu ;
+			
+	window
+		-title "Medley Render Tool"
+		-iconName "EFF Render Icon"
+		//40 pixels per button added
+		-widthHeight 225 375
+		-minimizeButton on
+		-maximizeButton on
+		//-sizeable on
+		-titleBar on
+		medRenderWindow;
+		
+	string $master_scrollLayout = `scrollLayout` ;
+
+	string $columnLayoutMaster = `columnLayout`;
+		
+	string $renderPassLayout = `frameLayout -collapsable true
+				-cl 0 
+				-label "Create Render Pass Controls"
+				-width 190` ; 
+		string $renderPassButtons = `columnLayout
+			-columnAttach "both" 5
+			-rowSpacing 10
+			-columnWidth 190` ;
+			
+				button
+					-label "Setup Hires MR Render"
+					-command "mh_basicHiresRender_2009"
+					-annotation "Sets up Mental Ray for High Quality" ;
+						
+				button 
+					-label "Setup Rear DOF Layer"
+					-command "mh_setupRearDOFlayer"
+					-annotation "Sets up Rear DOF layer and shaders. Requires DOF planes to work" ;
+					
+				button 
+					-label "Setup Front DOF Layer"
+					-command "mh_setupFrontDOFlayer"
+					-annotation "Sets up Front DOF layer and shaders. Requires DOF planes to work" ;
+					
+				button 
+					-label "Setup AO Layer"
+					-command "mh_setupAO"
+					-annotation "Sets up MR ao pass" ;
+					
+				button 
+					-label "Setup 3D gradient Layer"
+					-command "mh_setup3DGradientLayer"
+					-annotation "Sets up a 3D gradient layer with 2 locator controls under the active camera" ;
+					
+				button 
+					-label "Lum Pass from selection"
+					-command "mh_setupHeroOB"
+					-annotation "Select an object or objects to create a matte" ;
+					
+				button 
+					-label "Setup Fog DOF Layer"
+					-command "mh_setupFogDOF"
+					-annotation "Setup Maya Software Fog DOF pass" ;
+					
+				button 
+					-label "Submit to RenderPal"
+					-command "submitMayaToRenderPal"
+					-annotation "Send current render to RenderPal" ;
+			
+				setParent ..; //backup to FrameLayout
+		setParent ..; //back up to ColumnLayout 
+		
+	string $toolsLayout = `frameLayout -collapsable true
+				-cl 1 
+				-label "Renderlayer Tools"
+				-width 190` ; 
+		string $toolsButtons = `columnLayout
+			-columnAttach "both" 5
+			-rowSpacing 10
+			-columnWidth 190`;
+			
+			button 
+				-label "Save Render Layer Selection"
+				-command "mh_saveRenderSet"
+				-annotation "Store the renderable layers in a node for later use" ;
+				
+			button 
+				-label "Restore Render Layer Selection"
+				-command "mh_restoreRenderSet"
+				-annotation "Select a selection object and run this command" ;
+				
+			button 
+				-label "Make All Layers Renderable"
+				-command "mh_selectAllRenderLayers"
+				-annotation "Makes all layers renderable" ;
+				
+			button 
+				-label "Disable Rendering On All Layers"
+				-command "mh_deselectAllRenderLayers"
+				-annotation "Disables all layers for rendering" ;
+			
+			button 
+				-label "Solo Selected Render Layer"
+				-command "mh_soloRenderLayer"
+				-annotation "Solo Selected Render Layer for rendering" ;
+				
+			button 
+				-label "Prefix Render layers"
+				-command "mh_prefixRenderLayer"
+				-annotation "Prefixes Render Layer with user text" ;
+				
+			button
+			 	-label "Delete All Render Layers"
+			 	-command "mh_deleteRenderLayers"
+			 	-annotation "Deletes all render layers and reverts to the masterLayer" ;	
+				
+			setParent ..; //backup to FrameLayout
+		setParent ..; //back up to ColumnLayout 			
+		
+	string $utilityLayout = `frameLayout -collapsable true
+				-cl 1 
+				-label "Utility Scripts"
+				-width 190` ; 
+		string $utilityButtons = `columnLayout
+			-columnAttach "both" 5
+			-rowSpacing 10
+			-columnWidth 190`;
+			
+			button 
+				-label "Anim Tools"
+				-command "mh_animTools"
+				-annotation "A few helpful animation scripts" ;		
+				 		
+			button 
+				-label "WildCard Select"
+				-command "wildcardSel"
+				-annotation "This lets you select objects based on a shared name or character" ;
+			
+			button 
+				-label "Save Render View Images"
+				-command "mh_saveRender"
+				-annotation "This prompts a dialog to save all the render view images" ;
+				
+			button 
+				-label "Replace Material"
+				-command "mh_replaceMaterial"
+				-annotation "Select the material to be swapped then the new material" ;
+			
+			button 
+				-label "Select SG Components"
+				-command "mh_selectSG"
+				-annotation "Selects components of a shading group" ;
+				
+			button 
+				-label "Select SG Material"
+				-command "mh_selectMatSG"
+				-annotation "Selects material of a shading group" ;
+				
+			button 
+				-label "Install med Tools Menu"
+				-command "mh_medMenu"
+				-annotation "Installs the med Tools menu" ;
+				
+			button 
+				-label "Setup hotkeys"
+				-command "mh_medHotkey"
+				-annotation "Installs the med Hotkeys" ;
+			 setParent ..; //backup to FrameLayout
+		setParent ..; //back up to ColumnLayout 	
+			
+	showWindow medRenderWindow;	
+	
+			
+}
+	
+	

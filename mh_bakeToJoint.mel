@@ -1,0 +1,43 @@
+/**********************************************************************************************
+Procedure: mh_bakeToJoint()
+Version: 1.0
+Date: 06-04-15
+Description: This procedure transfers deformer based animation to joints. (emulated)
+
+**********************************************************************************************/
+
+global proc mh_bakeToJoint()
+{
+	//store the user selection
+	string $userSelection[] = `ls -sl`;
+	
+	//filter out the transforms of the current selection
+	string $transforms[] = `ls -sl -type "transform"`;
+	
+	//declare the shapes variable
+	string $newObjects[];
+	
+	// the temp positions are held in these
+	float $transX, $transY, $transZ, $rotX, $rotY, $rotZ, $scaleX, $scaleY, $scaleZ;
+	vector $tempVector;
+
+	//buffer variable for adding the new objects
+	$i= 0 ;
+	
+	for ($transform in $transforms){
+		
+			$newJoint = `joint -p 0 0 0`;
+			
+			select -cl ; 
+			
+			select $transform ; 
+			select -add $newJoint ; 
+			
+			string $pointConst[] = `pointConstraint -offset 0 0 0 -weight 1 -n pointConst_00` ;
+			string $orientConst[] = `orientConstraint -offset 0 0 0 -weight 1 -n orientConst_00` ;
+			
+			select -cl ; 
+			
+	}			
+			
+			

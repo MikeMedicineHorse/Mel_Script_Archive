@@ -1,0 +1,22 @@
+/**********************************************************************************************
+Procedure: mh_randRotation()
+Version: 1.0
+Date: 04-17-09
+Description: This procedure rotates all selected transforms randomly
+**********************************************************************************************/
+
+global proc mh_randRotation()
+{
+	//store the selection for future use--if needed
+	
+	string $userSelection[] = `ls -sl` ;
+	
+	//create a group dynamically ;
+	for ($i = 0; $i < size ($userSelection); $i++){
+			//set random rotate vales for each
+			setAttr ($userSelection[$i] + ".rotateX") (`rand 360`) ;
+			setAttr ($userSelection[$i] + ".rotateY") (`rand 360`) ;
+			setAttr ($userSelection[$i] + ".rotateZ") (`rand 360`) ;
+			}
+			
+}

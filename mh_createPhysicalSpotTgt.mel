@@ -1,0 +1,78 @@
+/**********************************************************************************************
+Procedure: mh_createPhysicalSpotTgt()
+Version: 1.0
+Date: 04-08-09
+Description: This procedure will create a MR physical spotlight w tgt...good stuff
+**********************************************************************************************/
+
+global proc mh_createPhysicalSpotTgt()
+{
+	//create the necessary nodes...
+	string $Light = `spotLight -i 1 -ca 45 -rgb 1 1 1 -d 0 -rs 0 -ss 0 `;
+	
+	//Here I am selecting the shape and then selecting the transform
+	//so I can rename it for good form.
+	select -r $Light ;
+	string $LightTrans[] = `pickWalk -d up`;
+	string $medLightTrans = `rename $LightTrans[0] medSpotPhysical_00` ;
+	
+	//I'm hacking the return here to rename the node myself
+	//since maya doesn't return the correct shape name here for the light
+	select $medLightTrans ; 
+	string $medLight[] = `pickWalk -d down`;
+	
+	//string $medLight = ($medLightTrans + "Shape") ; 
+	
+	//Here I am setting the default attrs to make it pretty
+	
+	setAttr ($medLight[0] + ".areaLight") 1;
+	setAttr ($medLight[0] + ".areaSamplingU") 4;
+	setAttr ($medLight[0] + ".areaSamplingV") 4;
+	setAttr ($medLight[0] + ".areaLowLevel") 1;
+	setAttr ($medLight[0] + ".areaLowSamplingU") 1;
+	setAttr ($medLight[0] + ".areaLowSamplingV") 1;
+	
+	//Below I am creating the MR physical nodes and connecting them
+	string $lightTemp = `createNode mib_cie_d -n medLightTemp` ;
+	setAttr ($lightTemp + ".intensity") 500;
+	
+	string $physicalLight = `createNode physical_light -n medPhysicalLight` ;
+	
+	connectAttr -f ($physicalLight + ".message") ($medLight[0] + ".miLightShader") ;
+	connectAttr -f ($lightTemp + ".outValue") ($physicalLight + ".color") ;
+	connectAttr -f ($lightTemp + ".outValueA") ($physicalLight + ".colorA") ;
+	
+	//Below I am selecting the final transform and hooking up
+	//some custom attrs for good form
+	
+	select -r  $medLightTrans ;
+	
+	addAttr -ln "lightIntensity"  -at double -dv 500 ; 
+	setAttr -e-keyable true ($medLightTrans + ".lightIntensity") ;
+	connectAttr -f ($medLightTrans + ".lightIntensity") ($lightTemp + ".intensity") ;
+	
+	addAttr -ln "coneAngle"  -at double  -min 0 -max 180 -dv 45 ;
+	setAttr -e-keyable true ($medLightTrans + ".coneAngle") ;
+	connectAttr -f ($medLightTrans + ".coneAngle") ($medLight[0] + ".coneAngle") ;
+	
+	//Now we create the locator for making the aim constraint
+	
+	string $locator[] = `spaceLocator -p 0 0 0 -n physAimLoc_00` ;
+	
+	select -r $locator ;
+	
+	select -add $medLightTrans ; 
+	
+	string $aimConst[] = `aimConstraint -offset 0 0 0 -weight 1 -aimVector 0 0 -1 -upVector 0 1 0 -worldUpType "none" -n physAimConst_00` ;
+	
+	//setAttr ($medLight[] + ".translateX") -10 ;  error here need to figure out for version 2.0
+	//setAttr ($medLight[] + ".translateY") 10 ;
+	//setAttr ($medLight[] + ".translateZ") 10 ;
+	
+	select -r $medLight ;
+	
+	move -r -10 10 10 ;
+	
+
+	
+}

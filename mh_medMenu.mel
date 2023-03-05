@@ -1,0 +1,184 @@
+/**********************************************************************************************
+Procedure: mh_medMenu()
+Version: 1.0
+Date: 05-07-09
+Description: This procedure creates the menu for my scripts
+**********************************************************************************************/
+
+
+global proc mh_medMenu()
+{
+	//declare the global maya UI variable
+	global string $gMainWindow ;
+	
+	//attach the following menu
+	setParent $gMainWindow ;
+	
+	if (`menu -exists medMainMenu`){
+		deleteUI -menu medMainMenu;		
+	}
+	
+	menu
+		-tearOff on
+		-aob true
+		-label "med Tools" 
+		medMainMenu ;
+
+				
+		menuItem 
+			-label "med Tool Box"
+			-command "mh_toolBox"
+			-annotation "A few scripts to make your life easier" ;	
+		
+		menuItem 
+			-label "med Molecular Shader"
+			-command "mh_medShader"
+			-annotation "This creates a starter material for molecular type scenes" ;
+
+		menuItem 
+			-label "med Noise Deformer"
+			-command "deformer -type medNoise"
+			-annotation "Creates the med Noise Deformer"
+			medNoiseItem ;
+			
+		menuItem
+			-label "Paint Noise Weights"
+			-command "jh_createNoiseWeight"
+			-annotation "Paint Vertex Weights for the Noise Deformer of the Selected Geometry";
+			
+		menuItem
+			-label "Toggle Noise Deformers"
+			-command "jh_toggleNoiseDeformers"
+			-annotation "Enable / Disable all of the Noise Deformers in the Scene";
+		
+		menuItem 
+			-label "med Falloff Deformer"
+			-command "jh_setupFalloffDeformer"
+			-annotation "Creates the med Falloff Deformer"
+			medFalloffItem ;
+			
+		menuItem 
+			-divider on ;
+		
+		menuItem 
+			-label "smartGroup"
+			-command "mh_smartGroup"
+			-annotation "Ctl+Shift+G | Groups the selected objects with accurate transforms-not 0,0,0" ;
+		
+		menuItem 
+			-label "fix Maya group pivot"
+			-command "mh_fixGroupPivot"
+			-annotation "Shift+Alt+G | Fixes the transform of the group to read accurate space values-not 0,0,0" ;
+			
+		menuItem 
+			-label "Center to selected objects"
+			-command "mh_centerToObject"
+			-annotation "Shift+Alt+C | Just like center to parent in C4D. Select target first then object to be moved" ;
+	
+		
+		menuItem 
+			-divider on ;
+
+		menuItem 
+			-label "Create Gimbal Cam"
+			-command "mh_gimbalCam"
+			-annotation "Creates a camera rig designed for smoother moves...and less headaches" ;
+		
+		menuItem 
+			-label "Create Target Camera"
+			-command "mh_createCameraTarget"
+			-annotation "Creates a simple target camera" ;
+		/*	
+		menuItem 
+			-label "Create Target Camera with Up Vector"
+			-command "mh_createCameraTargetUp"
+			-annotation "Creates a simple target camera with a up vector control" ;
+		*/	
+		menuItem 
+			-label "Create Camera from Current View"
+			-command "mh_createViewCam"
+			-annotation "Creates a camera from the current view" ;
+			
+		menuItem 
+			-label "Create Targeted Camera from Current View"
+			-command "mh_createViewCamTarget"
+			-annotation "Creates a target camera from the current view" ;
+		/*	
+		menuItem 
+			-label "Create Targeted UpVector Camera from Current View"
+			-command "mh_createViewCamTargetUp"
+			-annotation "Creates a target up vector camera from the current view" ;
+		*/		
+				
+		menuItem 
+			-divider on ;
+		
+		menuItem 
+			-label "Create Area Light"
+			-command "mh_createAreaLight"
+			-annotation "Creates an area light with medley settings" ;
+			
+		menuItem 
+			-label "Create Targeted Area Light"
+			-command "mh_createAreaLightTgt"
+			-annotation "Creates a medley area light with a target" ;
+			
+		menuItem 
+			-label "Create MR physical Light"
+			-command "mh_createPhysicalSpot"
+			-annotation "Creates a physical light with medley settings" ;
+		
+		menuItem 
+			-label "Create Targeted Physical Spot"
+			-command "mh_createPhysicalSpotTgt"
+			-annotation "Creates a targeted physical light with medley settings" ;
+			
+		menuItem 
+			-label "Create an interactive Area Light"
+			-command "mh_interactiveAreaLight"
+			-annotation "Select an object for the light to be targed to" ;
+			
+		menuItem 
+			-label "Create an interactive MR Spot Light"
+			-command "mh_interactivePhysicalSpot"
+			-annotation "Select an object for the light to be targed to" ;
+			
+		menuItem 
+			-label "Create MR Volume Spot"
+			-command "mmh_createPhysVol"
+			-annotation "Creates a spotlight with Volumetrics" ;
+			
+		menuItem 
+			-divider on ;
+			
+		menuItem 
+			-label "Random Rotation"
+			-command "mh_randRotation"
+			-annotation "Shift+Alt+R | Select Objects for random rotation" ;
+		
+		menuItem 
+			-label "Create Random Rotation with group"
+			-command "mh_randRotationGrp"
+			-annotation "Select Objects for random rotation. Creates a group for each obj as well" ;
+			
+		menuItem 
+			-label "Toggle Camera Resolution Gate"
+			-command "mh_resolutionGate"
+			-annotation "Control+Shift+R | Togges the resolution gate on and off" ;
+			
+		menuItem 
+			-divider on ;
+			
+		menuItem 
+			-label "Select Connected"
+			-command "mh_selectConnected"
+			-annotation "Ctl+] | Selects connected Polys/Verts/Edges" ;
+			
+		menuItem 
+			-label "Center Axis to Component Selection"
+			-command "mh_centerAxisSelection"
+			-annotation "Requires a componenet selection. Will center the axis to those components" ;
+							
+}
+	
+	

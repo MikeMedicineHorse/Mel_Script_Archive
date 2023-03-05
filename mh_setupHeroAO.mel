@@ -1,0 +1,170 @@
+/**********************************************************************************************
+Procedure: mh_setupHeroAO()
+Version: 1.0
+Date: 07-01-10
+Description: This procedure sets up a AO render layer for the currently selected
+object for
+**********************************************************************************************/
+
+
+global proc mh_setupHeroAO()
+{
+	
+	//***Gumby bug with global layer--consider adding objects from current render layer rather than createRenderLayer -g 
+	//*update 06-15-10-added single shader creation
+	//*update 06-15-10-added copy layer functionality to address gumby bug
+		
+	string $userSelection[] = `ls -sl`;
+	string $allGeometry[] = `ls -type mesh -type nurbsSurface -type subdiv` ;
+	
+	//V2.0 Edit
+	//Retain current layer for animator
+	string $userCurrentLayer = `editRenderLayerGlobals -q -currentRenderLayer`;
+	//V2.0 end
+	
+	//store all the cameras--can't remember why
+	string $allCameras[] = `ls -ca`;
+	
+	string $heroName;
+	string $result = `promptDialog
+							-title "Non Global AO pass"
+							-message "Enter name for AO layer:"
+							-button "OK"
+							-button "Cancel"
+							-defaultButton "OK"
+							-cancelButton "Cancel"
+							-dismissString "Cancel"`;
+							
+	if ($result == "OK"){
+		$heroName = `promptDialog -query`;
+		string $copiedLayer[] = `duplicate -inputConnections $userCurrentLayer` ;
+		renderLayerEditorItemOnRename $copiedLayer[0] $heroName;
+		//createRenderLayer -g -n $heroName;
+		editRenderLayerGlobals -currentRenderLayer $heroName;
+			
+		// create OB_black shader if not already created
+		string $aoShaderMat = `shadingNode -asShader surfaceShader -n heroAO_00` ;
+		$aoShaderSG = `sets -renderable true -noSurfaceShader true -empty -name ($aoShaderMat + "_SG")` ;
+		connectAttr -f ($aoShaderMat + ".outColor") ($aoShaderSG + ".surfaceShader") ;
+
+		//create AO mr node 
+		string $aoShader = `createNode mib_amb_occlusion -n medley_ao_shader_00` ;
+
+		setAttr ($aoShader + ".samples") 64 ;
+			
+		//connect shader nodes
+		connectAttr -f ($aoShader + ".outValue") ($aoShaderMat + ".outColor") ;
+
+		//Version 3.0 Edit-->Create materials as a layer override rather than per object
+		connectAttr -f ($aoShaderSG +".message") ($heroName +".shadingGroupOverride");
+
+		
+		//V2.0 EDIT here  **set camera to black as override
+		for ($i = 0; $i < size ($allCameras); $i++){
+			editRenderLayerAdjustment ($allCameras[$i] + ".backgroundColor");
+			setAttr ($allCameras[$i] + ".backgroundColor") -type double3 1 1 1 ;
+			}		
+		//END V2.0 EDIT
+
+		//set AA and/or create mentalRayGlobals if not already created
+		if (`objExists mentalrayGlobals`){		
+			editRenderLayerAdjustment "miDefaultOptions.finalGather" ;
+			setAttr "miDefaultOptions.finalGather" 0 ;
+					
+			//turn on raytracing as overide so AO calculates
+			editRenderLayerAdjustment "miDefaultOptions.rayTracing";
+			setAttr "miDefaultOptions.rayTracing" 1;
+						
+			editRenderLayerAdjustment "miDefaultOptions.minSamples";
+			setAttr "miDefaultOptions.minSamples" 0;
+						
+			editRenderLayerAdjustment "miDefaultOptions.maxSamples";
+			setAttr "miDefaultOptions.maxSamples" 2;
+				
+			editRenderLayerAdjustment "miDefaultOptions.filter";
+			setAttr miDefaultOptions.filter 3;
+				
+			setAttr "miDefaultOptions.jitter" 1;	
+		}else{
+			
+			unifiedRenderGlobalsWindow;
+			
+		
+			if ( `window -exists unifiedRenderGlobalsWindow` && `window -query -visible unifiedRenderGlobalsWindow` ){
+				   print "globals window open\n" ; 
+			   }else{
+				   error "Please open the render globals window first\n"; 
+			   }
+
+			//initialize the mental ray variables
+			string $tabLayoutName = "mentalRayTabLayout" ;
+			string $qualityTab = "mentalRayQualityTab" ;
+			int $selectedTab = `tabLayout -q -sti $tabLayoutName`;
+			string $tabNames[] = `tabLayout -q -ca $tabLayoutName`;
+			int $targetTab ;
+
+			//grab the current tab for user replace later
+			int $currentIndex = `tabLayout -q -sti $tabLayoutName`;
+			
+			//set Mental Ray as primary renderer
+			string $renderercurrent = `getAttr defaultRenderGlobals.currentRenderer` ;
+			string $mentalRay = "mentalRay" ;
+			if ($renderercurrent != $mentalRay)
+			{
+				setAttr "defaultRenderGlobals.currentRenderer" -type "string" $mentalRay ;
+			}
+
+			//Mental ray quality tab grabber 2010
+			for ($i = 0; $i < size ($tabNames); $i++){
+				if ($tabNames[$i] == $qualityTab){
+					$targetTab = $i ;
+					}
+			}	
+
+			if (`objExists mentalrayGlobals`){
+				print "mentalRay globals exist" ;
+			}else{
+				//hack to switch render globals frame to the quality tab forcing the MR nodes to be built
+				tabLayout -e -sti $targetTab $tabLayoutName;
+			}
+
+			//set the AA settings are nodes are created
+			editRenderLayerAdjustment "miDefaultOptions.finalGather" ;
+			setAttr "miDefaultOptions.finalGather" 0 ;
+					
+			//turn on raytracing as overide so AO calculates
+			editRenderLayerAdjustment "miDefaultOptions.rayTracing";
+			setAttr "miDefaultOptions.rayTracing" 1;
+						
+			editRenderLayerAdjustment "miDefaultOptions.minSamples";
+			setAttr "miDefaultOptions.minSamples" 0;
+						
+			editRenderLayerAdjustment "miDefaultOptions.maxSamples";
+			setAttr "miDefaultOptions.maxSamples" 2;
+				
+			editRenderLayerAdjustment "miDefaultOptions.filter";
+			setAttr miDefaultOptions.filter 3;
+				
+			setAttr "miDefaultOptions.jitter" 1;
+			
+			//close da window
+			window -e -vis 0 unifiedRenderGlobalsWindow;
+
+		}
+		
+		//reselect hero layer--dunno why 8-10-10
+		//renderLayerEditorSelectObjects RenderLayerTab $heroName;
+		
+		//just in case replace the initial selection
+		select -replace $userSelection;
+		
+		//V2.0 Edit
+		editRenderLayerGlobals -currentRenderLayer $userCurrentLayer;
+		//V2.0 End Edit
+		
+		print "Hero OB setup completed successfully.\r";
+	}	
+			
+}
+	
+	

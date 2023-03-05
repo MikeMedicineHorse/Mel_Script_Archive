@@ -1,0 +1,171 @@
+/**********************************************************************************************
+Procedure: mh_create_gCam()
+Version: 1.0
+Date: 08-11-10
+Description: This procedure creates a gimbal type camera
+
+**********************************************************************************************/
+
+
+global proc mh_create_gCam()
+{
+	//first create the camera
+	string $gCam[] = `camera
+				-centerOfInterest 5
+				-focalLength 35
+				-lensSqueezeRatio 1
+				-cameraScale 1
+				-horizontalFilmAperture 1.4173
+				-horizontalFilmOffset 0
+				-verticalFilmAperture 0.9449
+				-verticalFilmOffset 0
+				-filmFit Fill
+				-overscan 1
+				-motionBlur 0
+				-shutterAngle 144
+				-nearClipPlane 0.01
+				-farClipPlane 1000
+				-orthographic 0
+				-orthographicWidth 30`;
+	
+	//this command takes the selected camera and 
+	//turns it into a 3node camera
+	cameraMakeNode 3 $gCam[0];
+
+	//get the parent of the new 3node Camera
+	string $objParent[] = `listRelatives -p $gCam`;
+
+	//create the top node
+	string $topControlNode = `group -em -n "CamRotateYZ_and_TranslateNode"` ;
+
+	//parent the 3node camera to the top node
+	parent $objParent $topControlNode ;
+
+	//create the zoom node
+	string $zoomNode = `group -em -n "CamZoomNode"` ;
+
+	//for clear execution I'm combining the obj parent and attr in a string variable
+	string $matrixAttr = ($objParent[0] + ".worldUpMatrix");
+
+	//find the up object for parenting to the zoom node
+	string $upObj[] = `listConnections -d off -s on $matrixAttr`;
+
+	//parent the up and camera to the zoom node
+	parent $upObj[0] $zoomNode ;
+	parent $gCam[0] $zoomNode ;
+
+	//then parent the zoomNode back into the 3 node group
+	parent $zoomNode $objParent[0] ;
+
+	//just to mimic the original heirarchy of the rig...
+	//I will unparent the aim and reparent it
+
+
+	//find the up object for parenting to the zoom node
+	string $aimObj[] = `listConnections -d off -s on $objParent[0]`;
+
+	//remove the aim from the heirarchy
+	//kinda ghetto but I'm picking the aim off of the return from the 
+	//list connections above--could be nicer coded
+	///so [1] == aim node
+	parent -w $aimObj[1] ;
+
+	//then parent it back in
+	parent $aimObj[1] $objParent[0] ;
+
+	//move the various objects back in space like the rig
+	setAttr ($zoomNode + ".translateZ") 3.5;
+	setAttr ($aimObj[1] + ".translateZ") 0 ;
+	setAttr ($upObj[0] + ".translateY") 3.188 ;
+
+	//now phase 2
+	//lock and hiding attrs
+
+	//pruning the top node
+	setAttr -lock true -keyable false ($topControlNode + ".rx");
+	setAttr -lock true -keyable false ($topControlNode + ".rz");
+	setAttr -lock true -keyable false ($topControlNode + ".sx");
+	setAttr -lock true -keyable false ($topControlNode + ".sy");
+	setAttr -lock true -keyable false ($topControlNode + ".sz");
+	setAttr -lock false -keyable false ($topControlNode + ".v");
+
+	//add in some custom attrs to control the children nodes
+	addAttr -ln "rotationX" -at double -k 1 $topControlNode ;
+	addAttr -ln "rotationZ" -at double -k 1 $topControlNode ;
+	addAttr -ln "zoom" -at double -k 1 -dv 3.5 $topControlNode ;
+	
+
+	//connect the new attrs of the top node to the rotates/offsets of the 3 node grp
+	connectAttr ($topControlNode + ".rotationX") ($objParent[0] + ".rx");
+	connectAttr ($topControlNode + ".rotationZ") ($objParent[0] + ".offsetZ");
+	connectAttr ($topControlNode + ".zoom") ($zoomNode + ".tz");
+
+	//lock and hide...everything
+	setAttr -lock true -keyable false ($objParent[0] + ".tx");
+	setAttr -lock true -keyable false ($objParent[0] + ".ty");
+	setAttr -lock false -keyable false ($objParent[0] + ".rx");
+	setAttr -lock true -keyable false ($objParent[0] + ".ry");
+	setAttr -lock true -keyable false ($objParent[0] + ".rz");
+	setAttr -lock true -keyable false ($objParent[0] + ".sx");
+	setAttr -lock true -keyable false ($objParent[0] + ".sy");
+	setAttr -lock true -keyable false ($objParent[0] + ".sz");
+	setAttr -lock true -keyable false ($objParent[0] + ".v");
+	setAttr -lock true -keyable false ($objParent[0] + ".offsetX");
+	setAttr -lock true -keyable false ($objParent[0] + ".offsetY");
+	setAttr -lock false -keyable false ($objParent[0] + ".offsetZ");
+	setAttr -lock true -keyable false ($objParent[0] + ".twist");
+	setAttr -lock true -keyable false ($objParent[0] + ".tz");
+
+	//zoomNode locking
+	setAttr -lock true -keyable false ($zoomNode + ".tx");
+	setAttr -lock true -keyable false ($zoomNode + ".ty");
+	setAttr -lock false -keyable false ($zoomNode + ".tz");
+	setAttr -lock true -keyable false ($zoomNode + ".rx");
+	setAttr -lock true -keyable false ($zoomNode + ".ry");
+	setAttr -lock true -keyable false ($zoomNode + ".rz");
+	setAttr -lock true -keyable false ($zoomNode + ".sx");
+	setAttr -lock true -keyable false ($zoomNode + ".sy");
+	setAttr -lock true -keyable false ($zoomNode + ".sz");
+	setAttr -lock true -keyable false ($zoomNode + ".v");
+
+	//upObject locking
+	setAttr -lock true -keyable false ($upObj[0] + ".tx");
+	setAttr -lock true -keyable false ($upObj[0] + ".ty");
+	setAttr -lock true -keyable false ($upObj[0] + ".tz");
+	setAttr -lock true -keyable false ($upObj[0] + ".rx");
+	setAttr -lock true -keyable false ($upObj[0] + ".ry");
+	setAttr -lock true -keyable false ($upObj[0] + ".rz");
+	setAttr -lock true -keyable false ($upObj[0] + ".sx");
+	setAttr -lock true -keyable false ($upObj[0] + ".sy");
+	setAttr -lock true -keyable false ($upObj[0] + ".sz");
+	setAttr -lock false -keyable true ($upObj[0] + ".v");
+
+	//camera locking
+	setAttr -lock true -keyable false ($gCam[0] + ".tx");
+	setAttr -lock true -keyable false ($gCam[0] + ".ty");
+	setAttr -lock true -keyable false ($gCam[0] + ".tz");
+	setAttr -lock false -keyable false ($gCam[0] + ".rx");
+	setAttr -lock false -keyable false ($gCam[0] + ".ry");
+	setAttr -lock false -keyable false ($gCam[0] + ".rz");
+	setAttr -lock true -keyable false ($gCam[0] + ".sx");
+	setAttr -lock true -keyable false ($gCam[0] + ".sy");
+	setAttr -lock true -keyable false ($gCam[0] + ".sz");
+	setAttr -lock false -keyable true ($gCam[0] + ".v");
+
+	//upObject locking
+	setAttr -lock true -keyable false ($aimObj[1] + ".tx");
+	setAttr -lock true -keyable false ($aimObj[1] + ".ty");
+	setAttr -lock true -keyable false ($aimObj[1] + ".tz");
+	setAttr -lock true -keyable false ($aimObj[1] + ".rx");
+	setAttr -lock true -keyable false ($aimObj[1] + ".ry");
+	setAttr -lock true -keyable false ($aimObj[1] + ".rz");
+	setAttr -lock true -keyable false ($aimObj[1] + ".sx");
+	setAttr -lock true -keyable false ($aimObj[1] + ".sy");
+	setAttr -lock true -keyable false ($aimObj[1] + ".sz");
+	setAttr -lock false -keyable true ($aimObj[1] + ".v");
+
+	//select the top node in the end
+	select $topControlNode ;
+}
+	
+	

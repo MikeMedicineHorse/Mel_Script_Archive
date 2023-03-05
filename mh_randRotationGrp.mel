@@ -1,0 +1,38 @@
+/**********************************************************************************************
+Procedure: mh_randRotationGrp()
+Version: 1.0
+Date: 04-17-09
+Description: This procedure puts all selected transforms in a group and randomly rotates them
+**********************************************************************************************/
+
+global proc mh_randRotationGrp()
+{
+	//store the selection for future use--if needed
+	
+	string $userSelection[] = `ls -sl` ;
+	
+	string $groupNodes[] ;
+	
+	//create a group dynamically ;
+	for ($i = 0; $i < size ($userSelection); $i++){
+			//select the individual objects
+			select $userSelection[$i] ;
+			
+			//perform the group on each
+			string $groupNode = `group -n randGrp_00` ;
+			
+			//select the group-currently not needed
+			//select $groupNode ; 
+
+			//add the newly created group to a variable			
+			$groupNodes[$i] = $groupNode ; 
+			
+			//set random rotate vales for each
+			setAttr ($groupNode + ".rotateX") (`rand 360`) ;
+			setAttr ($groupNode + ".rotateY") (`rand 360`) ;
+			setAttr ($groupNode + ".rotateZ") (`rand 360`) ;
+			}
+	//select the created groups
+	select $groupNodes ; 
+		
+}

@@ -1,0 +1,90 @@
+/**********************************************************************************************
+
+Procedure: mh_textRig()
+Version: 1.0
+Date: 02-11-15
+Description: This procedure creates a rig that aligns text to the camera with a keyable
+rotation offset.
+ 
+**********************************************************************************************/
+
+global proc mh_textRig()
+{
+	//store the selected group for future use
+	string $objSelection[] = `ls -sl` ;
+
+	//create a counter variable for node creation
+	global int $medCounter ; 
+		
+	//clear selection
+	select -cl ;
+	
+	//first we grab the current view camera
+	//declare the variable
+	string $viewCamera;
+
+	// First get the panel that currently has focus
+	string $panel = `getPanel -wf`;
+
+	// Compare the panel's type to confirm it is a "modelPanel"
+	if ( "modelPanel" == `getPanel -to $panel` ){
+		// Get the name of the camera using the ‘modelEditor’ command
+		$viewCamera = `modelEditor -q -camera $panel`;
+  	}else{
+	  	error "please have view panel active" ;
+  	}
+  	
+  	//intialize cam transform variable
+  	string $camTransform = "";
+
+  	//the code above returns the shape, this converts it to a transform
+	if ( "transform" != `nodeType $viewCamera` )
+		// If given node is already a transform, just pass on through
+		{
+		string $parents[] = `listRelatives -fullPath -parent $viewCamera`;
+		$camTransform = $parents[0];
+		}
+	
+	//create the point constraint node
+	string $pointConst = `group -em -n ("Text_Point_Const_" + $medCounter)` ;
+	setAttr ($pointConst + ".rotateOrder") 2;
+	
+	//create the orient constraint node
+	string $orientConst = `group -em -n ("Text_Orient_Const_" + $medCounter)` ;
+	setAttr ($orientConst + ".rotateOrder") 2;
+	
+	//create the offset rotation node
+	string $rotOffset = `group -em -n ("Text_Rotation_Offset_" + $medCounter)` ;
+	setAttr ($rotOffset + ".rotateOrder") 2;
+	
+	//parent the newly created nodes
+	parent $orientConst $pointConst ;
+	parent $rotOffset $orientConst ;
+	
+	//select the object to point constrain to
+	select $objSelection ;
+	
+	//select the point constraint node
+	select -add $pointConst ; 
+	
+	//create the constraint to align the position
+	string $pointConstraint[] = `pointConstraint -offset 0 0 0 -weight 1 -n ("pointConst_" + $medCounter)` ;
+	
+	//clear selection
+	select -cl ;
+	
+	//select the camera for the orient contraint
+	select $camTransform  ; 
+	
+	//select the orient constraint node
+	select -add $orientConst ; 
+	
+	//create the orient const
+	string $orientConstraint[] = `orientConstraint -offset 0 0 0 -weight 1 -n ("orientConst_" + $medCounter)` ;
+	
+	//clear the selection
+	select -cl ; 
+	
+	$medCounter++ ;
+	
+}

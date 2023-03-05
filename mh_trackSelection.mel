@@ -1,0 +1,13 @@
+/**********************************************************************************************
+Procedure: mh_trackSelection()
+Version: 1.0
+Date: 8-25-17
+Description: This procedure enables selection tracking for working with components
+
+**********************************************************************************************/
+
+global proc mh_trackSelection() 
+{	
+	//intitialize selection order
+	selectPref -tso 1 ;
+}

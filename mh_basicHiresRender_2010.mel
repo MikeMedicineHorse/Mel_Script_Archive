@@ -1,0 +1,152 @@
+/**********************************************************************************************
+Procedure: mh_basicHiresRender2009()
+Version: 3.0
+Date: 12-10-09
+Description: This procedure will setup a basic MR hires render
+**********************************************************************************************/
+
+
+global proc mh_basicHiresRender_2009()
+{
+	unifiedRenderGlobalsWindow;
+	
+	if ( `window -exists unifiedRenderGlobalsWindow` && `window -query -visible unifiedRenderGlobalsWindow` ){
+		   print "globals window open\n" ; 
+	   }else{
+		   error "Please open the render globals window first\n"; 
+	   }
+
+	//initialize the mental ray variables
+	string $tabLayoutName = "mentalRayTabLayout" ;
+	string $qualityTab = "mentalRayQualityTab" ;
+	int $selectedTab = `tabLayout -q -sti $tabLayoutName`;
+	string $tabNames[] = `tabLayout -q -ca $tabLayoutName`;
+	int $targetTab ;
+
+	//grab the current tab for user replace later
+	int $currentIndex = `tabLayout -q -sti $tabLayoutName`;
+	
+	//set Mental Ray as primary renderer
+	string $renderercurrent = `getAttr defaultRenderGlobals.currentRenderer` ;
+	string $mentalRay = "mentalRay" ;
+	if ($renderercurrent != $mentalRay)
+	{
+		setAttr "defaultRenderGlobals.currentRenderer" -type "string" $mentalRay ;
+	}
+
+	//Mental ray quality tab grabber 2010
+	for ($i = 0; $i < size ($tabNames); $i++){
+		if ($tabNames[$i] == $qualityTab){
+			$targetTab = $i ;
+			}
+	}	
+
+	if (`objExists mentalrayGlobals`){
+		print "mentalRay globals exist" ;
+	}else{
+		//hack to switch render globals frame to the quality tab forcing the MR nodes to be built
+		tabLayout -e -sti $targetTab $tabLayoutName;
+	}
+	
+				
+	//let's clear the field just in case the script following adds extra string characters
+	setAttr -type "string" defaultRenderGlobals.imageFilePrefix "" ;
+	
+	//grab the current prefix if any, to preserve while script is run. 	
+	string $currentPrefix = `getAttr defaultRenderGlobals.imageFilePrefix`;	
+	
+	//below we are seeing if there is a user defined prefix, if not we use the scene file name
+	//if so... we grab what the user has and then add the renderlayer renderpal stuff.
+	
+	//grab just the scene file name mel
+	string $fileName = `file -q -sceneName`;
+	string $filepart = match( "[^/\\]*$", $fileName );
+	string $ext = fileExtension($filepart);
+	$ext  = "." + $ext;
+	string $justFileName = substring($filepart,  1, size($filepart) - size($ext));
+	
+	//here is where we add the renderpal string info <>/<> etc...
+	setAttr -type "string" defaultRenderGlobals.imageFilePrefix ($justFileName + "/" + "<RenderLayer>" + "/" + $justFileName + "_" + "<RenderLayer>");
+	
+	
+	//Old behavior-> Changing because if renderpal stuff is added then this code adds other renderpal suffix info on top of it.
+	/*if ($currentPrefix == "" ){
+		//grab just the scene file name mel
+		string $fileName = `file -q -sceneName`;
+		string $filepart = match( "[^/\\]*$", $fileName );
+		string $ext = fileExtension($filepart);
+		$ext  = "." + $ext;
+		string $justFileName = substring($filepart,  1, size($filepart) - size($ext));
+		//here is where we add the renderpal string info <>/<> etc...
+		setAttr -type "string" defaultRenderGlobals.imageFilePrefix ($justFileName + "/" + "<RenderLayer>" + "/" + "<RenderLayer>");
+		print "I contain nothing\n" ; 
+	}else{
+		//here I add the user defined prefix and add the renderpal stuff
+		setAttr -type "string" defaultRenderGlobals.imageFilePrefix ($currentPrefix + "/" + "<RenderLayer>" + "/" + "<RenderLayer>");
+		print "I do contain stuff\n" ; 
+	}
+	*/
+	
+	//MEL to apply just the filename to the render **keep for later
+	//setAttr -type "string" defaultRenderGlobals.imageFilePrefix $justFileName;
+	
+	
+	//set framepadding, extension format, and image format
+	setMayaSoftwareFrameExt(7, 1); 
+	setAttr "defaultRenderGlobals.extensionPadding" 4;
+	
+	//changed format from 3 (tiff) to 7 (iff) 03-15-10
+	setAttr "defaultRenderGlobals.imageFormat" 31;
+
+	//set start and end frame from playback range
+	float $playbackMin = `playbackOptions -q -min`;
+	float $playbackMax = `playbackOptions -q -max`;
+
+	setAttr "defaultRenderGlobals.startFrame" $playbackMin;
+	setAttr "defaultRenderGlobals.endFrame" $playbackMax;
+
+	//set image resolution**unnecessary and not user friendly
+	//setAttr "defaultResolution.width" 960;
+	//setAttr "defaultResolution.height" 540;
+	//setAttr "defaultResolution.aspectLock" 1;
+	//setAttr "defaultResolution.deviceAspectRatio" 1.778;
+	//setAttr "defaultResolution.pixelAspect" 1;
+
+
+	//turn off default lighting :)**not user friendly
+	//setAttr "defaultRenderGlobals.enableDefaultLight" 0;
+
+	//set default Mental Ray Default Settings
+	if (`objExists mentalrayGlobals`){	
+		//below enable raytracing in the primary renderer **not user friendly
+		//setAttr "miDefaultOptions.scanline" 0;
+		//setAttr "miDefaultOptions.finalGather" 0;
+		//setAttr "miDefaultOptions.caustics" 0;
+		//setAttr "miDefaultOptions.globalIllum" 0;
+		//setAttr "miDefaultOptions.rayTracing" 1;
+		//setAttr "miDefaultOptions.motionBlur" 0;
+
+		//set Raytrace quality
+		setAttr "miDefaultOptions.minSamples" 0;
+		setAttr "miDefaultOptions.maxSamples" 2;
+	
+		//set filter to Mitchell
+		setAttr miDefaultOptions.filter 3;
+		setAttr "miDefaultOptions.jitter" 1;
+		
+		//set raytracing rays to high quality
+		setAttr "miDefaultOptions.maxReflectionRays" 10;
+		setAttr "miDefaultOptions.maxRefractionRays" 10;
+		setAttr "miDefaultOptions.maxRayDepth" 20;
+	}else{
+		warning ("MentalRay nodes not generated yet. Please run again\n");
+	}
+	
+	//render globals frame to the common tab
+	tabLayout -e -sti $currentIndex mentalRayTabLayout;	
+	
+	print "basic hires render setup complete! GGPO\n";
+	
+	mh_renderCamUI ;
+	
+	}

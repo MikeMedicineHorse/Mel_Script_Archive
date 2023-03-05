@@ -1,0 +1,20 @@
+/**********************************************************************************************
+Procedure: mh_selectSG()
+Version: 1.0
+Date: 08-04-09
+Description: This procedure sets up a ob render layer for the currently selected
+object.
+**********************************************************************************************/
+
+
+global proc mh_selectSG()
+{		
+	string $shadingGroups[] = `ls -sl` ;
+		
+	for ($i = 0; $i < size ($shadingGroups); $i++){
+		$shadingGroupSets = `sets -q $shadingGroups[$i]` ;
+		select -r $shadingGroupSets ;
+		}
+}
+	
+	

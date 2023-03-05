@@ -1,0 +1,52 @@
+/**********************************************************************************************
+Procedure: mh_MolRod()
+Version: 1.0
+Date: 11-12-13
+Description: This procedure makes a rod (cylinder) between 2 spheres. 
+**********************************************************************************************/
+
+global proc mh_MolRod()
+{
+	//store selection
+	string $selection[] = `ls -sl` ;
+	
+	//grab the shape nodes for later
+	string $shapes[];
+	$shapes = $selection;
+	$shapes = `listRelatives -shapes $selection`;
+	
+	//create the distance nodes to be used for setting up the rod
+	float $startpoint[] = `xform -q -ws -rp $selection[0]`; 
+	float $endpoint[] = `xform -q -ws -rp $selection[1]`; 
+	
+	string $distance = `distanceDimension -sp $startpoint[0] $startpoint[1] $startpoint[2] -ep $endpoint[0] $endpoint[1] $endpoint[2]`;
+	float $distanceCalc = `getAttr ($distance + ".distance")`;
+	
+	//create the cylinder
+	string $cylinder[] = `polyCylinder -r .07 -h $distanceCalc -sx 50 -sy 10 -sz 1 -ax 0 1 0 -rcp 0 -cuv 3 -ch 1`;
+	
+	//select the objects for point constraining to center of initial selection
+	select $selection[0]; 
+	select -add $selection[1]; 
+	select -add $cylinder; 
+	
+	//create the constraints to snap the object's position and rotation
+	string $pointConst[] = `pointConstraint -offset 0 0 0 -weight 1 -n pointConst_00` ;
+		
+	//delete the constraints
+	delete $pointConst ;
+		
+	//aim the rod at the second selection item	
+	select -clear; 
+	select $selection[1];
+	select -add $cylinder;  
+	string $aimConst[] = `aimConstraint -offset 0 0 0 -weight 1 -aimVector 0 1 0 -upVector 0 1 0 -worldUpType "scene"`;
+	delete $aimConst ;
+	
+	//delete the distance nodes 
+	select $distance ; 
+	pickWalk -d up ; 
+	delete ;
+	delete locator1; 
+	delete locator2;	
+}

@@ -1,0 +1,59 @@
+/**********************************************************************************************
+Procedure: mh_selectAnimAndConstraints
+Version: 1.0
+Date: 05-11-16
+Description: This procedure selects all nodes that have keys.
+**********************************************************************************************/
+
+
+global proc mh_selectAnimAndConstraints()
+{	
+	//grab the root level objects
+	$userSelection = `select -all` ;
+	
+	//select the child objects
+	select -hi ; 
+	
+	//redeclare the selection variable
+	$userSelection = `ls -sl` ;
+	
+	//wipe the selection to prepare for animation filtering
+	select -cl ;
+	
+	for ($i = 0; $i < size ($userSelection); $i++){
+		//this checks to see if a given node in the hierarachy has animation connected to it
+		$animCheck = `listConnections -t animCurve $userSelection[$i]` ;
+		
+		//intitialize the variable used to see if a node has animation
+		$animBuffer = size($animCheck) ;
+		
+		//if any anim curves were connect the variable would be greater than 0 so...
+		if ($animBuffer>0){
+			select -add $userSelection[$i] ;
+			
+		//wipe the buffer variable to prepare for checking the next object	
+		$animBuffer = 0 ;
+		}
+	}
+	
+	//add in the constraint objects
+	string $cons[] = `ls -type "constraint"`;
+	
+	for ( $con in $cons ){
+    	string $targetAttrString = ( $con+ "" );
+    	string $connections[] = `listConnections $targetAttrString`;
+    	string $connectionsFlattened[] = stringArrayRemoveDuplicates($connections);
+		for ( $f in $connectionsFlattened )
+        	if ( $f != $con )
+            //print ( $f+ " is a target\n" );
+            select -add $f;
+		}
+		
+	string $sceneJoints[] = `ls -type joint`;
+	select -add $sceneJoints ;
+					
+}
+	
+
+	
+	

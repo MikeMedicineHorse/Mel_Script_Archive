@@ -1,0 +1,34 @@
+/**********************************************************************************************
+Procedure: mh_replaceMaterial()
+Date: 05-06-09
+Description: This procedure will replace the first selected material with the second
+**********************************************************************************************/
+
+global proc mh_replaceMaterial()
+{
+	//grab the user selected materials
+	string $selectedMaterials[] = `ls -sl` ;
+	
+	//error if 2 objects are not selected
+	if (size ($selectedMaterials) != 2 ){
+		error "Select only 2 materials please" ;
+	}
+	
+	//aquire the shading groups of the selected nodes
+	$targetShadingGroup = `listConnections -d true -s false -p false -t "shadingEngine" $selectedMaterials[0]` ;
+	$replaceShadingGroup = `listConnections -d true -s false -p false -t "shadingEngine" $selectedMaterials[1]` ;
+	
+	//store the target shading group members
+	$targetGroupSets = `sets -q $targetShadingGroup` ;
+	
+	//then select them
+	select -r $targetGroupSets ;
+	
+	//then apply the new shader
+	sets -e -forceElement $replaceShadingGroup;
+	
+	//then restore the user selection
+	select -r $selectedMaterials ;
+}
+
+	 

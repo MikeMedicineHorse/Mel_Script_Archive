@@ -1,0 +1,86 @@
+/**********************************************************************************************
+Procedure: mh_createGroupControl()
+Version: 2.0
+Date: 04-10-09
+Description: This procedure creates a group then parents the selected object to it
+**********************************************************************************************/
+
+global proc mh_createGroupControl()
+{
+	//store the selected group for future use
+	
+
+	
+	//if more than one obj selected error out.
+	//if (size($selectedGrp) > 1)
+    //           error ("Please select only one goup node.\n");
+    
+    //filter out the transforms of the current selection
+	string $transforms[] = `ls -sl`;
+	string $animGroup[] ;
+	
+	for ($i = 0; $i < size ($transforms); $i++){
+			select -cl ;
+			
+			$animGroup[$i] = `group -em -n ($transforms[$i] + "_anim")` ;
+			
+			select $transforms[$i] ;
+			select -add $animGroup[$i] ;
+			
+			//create the constraints to snap the object's position and rotation
+			string $pointConst[] = `pointConstraint -offset 0 0 0 -weight 1 -n pointConst_00` ;
+			string $orientConst[] = `orientConstraint -offset 0 0 0 -weight 1 -n orientConst_00` ;
+			
+			//delete the constraints
+			delete $pointConst ;
+			delete $orientConst ;
+			
+			select -cl ; 
+		
+			select $transforms[$i] ; 
+	 	
+	 		select -add $animGroup[$i] ; 	
+	 	
+	 		parent ; 
+	 	
+	 		select -cl ; 
+	 	
+			}
+	select $animGroup ;    
+	
+	/*
+	for ($transform in $transforms){
+		
+	 	select -cl ; 
+ 	
+	 	$animGroup = `group -em -n ($transform + "_anim")` ;
+	 	
+	 	select $transform ; 
+	 	
+	 	select -add $animGroup ; 
+	 	
+	 	//create the constraints to snap the object's position and rotation
+		string $pointConst[] = `pointConstraint -offset 0 0 0 -weight 1 -n pointConst_00` ;
+		string $orientConst[] = `orientConstraint -offset 0 0 0 -weight 1 -n orientConst_00` ;
+		
+		//delete the constraints
+		delete $pointConst ;
+		delete $orientConst ;
+		
+		select -cl ; 
+		
+		select $transform ; 
+	 	
+	 	select -add $animGroup ; 	
+	 	
+	 	parent ; 
+	 	
+	 	select -cl ; 
+	 	
+	 	select $animGroup ; 
+		}
+	
+	select -r $transforms ;
+	*/
+    	 		
+}

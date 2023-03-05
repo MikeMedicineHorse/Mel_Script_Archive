@@ -1,0 +1,74 @@
+/**********************************************************************************************
+Procedure: mh_renderCamUI v1.0
+Date: 12-10-09
+Description: This procedure will launch a window to set the renderable camera
+**********************************************************************************************/
+
+global proc mh_renderCamUI()
+{
+
+	string $allCameras[] = `ls -typ camera` ;
+	string $renderableCams[] ;
+	
+	//delete teh renderCam windows if existed before
+	if (`window -exists renderCamWindow`){
+		deleteUI -window renderCamWindow;		
+	}
+	
+	if (`windowPref -exists renderCamWindow`){
+			windowPref -remove renderCamWindow;
+	}
+	
+
+	//    Create a window with two option menu groups.
+	string $window = `window -title "Pick Renderable Camera" 
+							 -w 510
+							 -h 90 
+							 -sizeable on 
+							 -titleBar on
+							 renderCamWindow`;
+	columnLayout
+		-columnAttach "both" 5
+		-rowSpacing 5
+		-columnWidth 500;
+
+	string $colors = `optionMenuGrp -label "  scene cameras ------------->>" -cw 2 500`;
+
+	//build the optionMenuGrp items
+	for ($i = 0; $i < size ($allCameras); $i++){
+			menuItem -parent ($colors + "|OptionMenu") -label $allCameras[$i];
+			if (getAttr ($allCameras[$i] + ".renderable") == 1){
+				//print $allCameras[$i] ; 
+			}else{
+			}
+		
+			//$shadingGroupSets = `sets -q $shadingGroups[$i]` ;
+		}
+	button
+			-label "Set Renderable Camera and Close"
+			-command ("mh_changeRenderCam " + $colors + " " + $window)
+			-annotation "Set Renderable Camera and Close" ;
+	
+	// Finally force recomputing the UI--after setting the appropriate renderable camera
+	//evalDeferred("updateMayaSoftwareCameraControl");
+	
+	showWindow $window;
+}
+
+global proc mh_changeRenderCam(string $colors,
+						       string $window)
+{
+	string $allCameras[] = `ls -typ camera` ;
+	for ($i = 0; $i < size ($allCameras); $i++){
+		setAttr ($allCameras[$i] + ".renderable") 0 ;
+	}
+		
+	string $optionMenuSelection = `optionMenuGrp -q -v $colors` ;
+	setAttr ($optionMenuSelection + ".renderable") 1 ;
+	// Finally force recomputing the UI--after setting the appropriate renderable camera
+	evalDeferred("updateMayaSoftwareCameraControl");
+	deleteUI -window $window ;
+	windowPref -remove $window ;
+
+}
+	

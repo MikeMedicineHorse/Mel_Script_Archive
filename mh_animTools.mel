@@ -1,0 +1,175 @@
+/**********************************************************************************************
+Procedure: mh_animTools()
+Version: 1.0
+Date: 01-27-10
+Description: This procedure creates the UI for Medley's animation tools
+**********************************************************************************************/
+
+
+global proc mh_animTools()
+{
+	
+	if (`window -exists medAnimWindow`){
+		deleteUI -window medAnimWindow;		
+	}
+	
+	if (`windowPref -exists medAnimWindow`){
+			windowPref -remove medAnimWindow;
+	}
+			
+	window
+		-title "Medley Animation Tool"
+		//-iconName "EFF Render Icon"
+		//40 pixels per button added
+		-widthHeight 225 270
+		-minimizeButton on
+		-maximizeButton on
+		//-sizeable on
+		-titleBar on
+		medAnimWindow;
+		
+	scrollLayout scrollLayout;
+
+	columnLayout;
+		
+	frameLayout -collapsable true
+				-cl 0 
+				-label "Animation Tools"
+				-width 190 ; 
+	columnLayout
+		-columnAttach "both" 5
+		-rowSpacing 10
+		-columnWidth 190;
+	//text
+		//-label "Create Render Pass Controls";
+		
+	button
+		-label "Select All Animated Nodes"
+		-command "mh_selectAllAnimated"
+		-annotation "Ctl+Alt+Shift+A : Selects all animated nodes in scene." ;
+			
+	button 
+		-label "Select Animated Child Nodes"
+		-command "mh_selectAnimated"
+		-annotation "Ctl+Shift+A : Selects any animated child nodes of the selected object" ;
+		
+	button 
+		-label "Select Object From Graph Editor"
+		-command "mh_selectGraphObject"
+		-annotation "Ctl+Shift+S : Converts graph selection to outliner selection" ;
+		
+	button 
+		-label "Reverse Selected Keys"
+		-command "mh_reverseSelectedKeys"
+		-annotation "Ctl+Shift+R : Mirrors selected keys at the midpoint of the selection" ;
+		
+	button 
+		-label "Setup hotkeys"
+		-command "mh_medAnimHotkey"
+		-annotation "Installs the med Animation Hotkeys" ;
+		
+		setParent ..; //backup to FrameLayout
+	setParent ..; //back up to ColumnLayout 
+	
+	/*
+		
+	frameLayout -collapsable true
+				-cl 1 
+				-label "Renderlayer Tools"
+				-width 190 ; 
+	columnLayout
+		-columnAttach "both" 5
+		-rowSpacing 10
+		-columnWidth 190;
+		
+	button 
+		-label "Save Render Layer Selection"
+		-command "mh_saveRenderSet"
+		-annotation "Store the renderable layers in a node for later use" ;
+		
+	button 
+		-label "Restore Render Layer Selection"
+		-command "mh_restoreRenderSet"
+		-annotation "Select a selection object and run this command" ;
+		
+	button 
+		-label "Make All Layers Renderable"
+		-command "mh_selectAllRenderLayers"
+		-annotation "Makes all layers renderable" ;
+		
+	button 
+		-label "Disable Rendering On All Layers"
+		-command "mh_deselectAllRenderLayers"
+		-annotation "Disables all layers for rendering" ;
+	
+	button 
+		-label "Solo Selected Render Layer"
+		-command "mh_soloRenderLayer"
+		-annotation "Solo Selected Render Layer for rendering" ;
+		
+	button 
+		-label "Prefix Render layers"
+		-command "mh_prefixRenderLayer"
+		-annotation "Prefixes Render Layer with user text" ;
+		
+	button
+	 	-label "Delete All Render Layers"
+	 	-command "mh_deleteRenderLayers"
+	 	-annotation "Deletes all render layers and reverts to the masterLayer" ;	
+		
+		setParent ..; //backup to FrameLayout
+	setParent ..; //back up to ColumnLayout 			
+		
+	frameLayout -collapsable true
+				-cl 1 
+				-label "Utility Scripts"
+				-width 190 ; 
+	columnLayout
+		-columnAttach "both" 5
+		-rowSpacing 10
+		-columnWidth 190;	
+		 		
+	button 
+		-label "WildCard Select"
+		-command "wildcardSel"
+		-annotation "This lets you select objects based on a shared name or character" ;
+	
+	button 
+		-label "Save Render View Images"
+		-command "mh_saveRender"
+		-annotation "This prompts a dialog to save all the render view images" ;
+		
+	button 
+		-label "Replace Material"
+		-command "mh_replaceMaterial"
+		-annotation "Select the material to be swapped then the new material" ;
+	
+	button 
+		-label "Select SG Components"
+		-command "mh_selectSG"
+		-annotation "Selects components of a shading group" ;
+		
+	button 
+		-label "Select SG Material"
+		-command "mh_selectMatSG"
+		-annotation "Selects material of a shading group" ;
+		
+	button 
+		-label "Install med Tools Menu"
+		-command "mh_medMenu"
+		-annotation "Installs the med Tools menu" ;
+		
+	button 
+		-label "Setup hotkeys"
+		-command "mh_medHotkey"
+		-annotation "Installs the med Hotkeys" ;
+	 setParent ..; //backup to FrameLayout
+	setParent ..; //back up to ColumnLayout 	
+	*/
+			
+	showWindow medAnimWindow;	
+	
+			
+}
+	
+	

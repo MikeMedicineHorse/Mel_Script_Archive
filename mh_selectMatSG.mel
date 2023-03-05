@@ -1,0 +1,39 @@
+/**********************************************************************************************
+Procedure: mh_selectMatSG()
+Version: 1.0
+Date: 08-04-09
+Description: This procedure sets up a ob render layer for the currently selected
+object.
+**********************************************************************************************/
+
+global proc string rootNode( string $object )
+	{
+		string $buffer[];
+		tokenize $object "." $buffer;
+		return $buffer[0];
+	}
+	
+global proc mh_selectMatSG()
+{		
+	
+
+
+	string $SG[] = `ls -sl` ;
+	string $material = "";
+
+	if ( "shadingEngine" == `nodeType $SG` &&
+	`connectionInfo -id ( $SG[0] + ".surfaceShader" )` )
+	{
+	$material = rootNode( `connectionInfo -sfd
+	( $SG[0] + ".surfaceShader" )` );
+	}
+
+	hyperShadePanelSetActiveTabLayout hyperShadePanel1 firstPaneTabs false;
+	nodePressCallback collection1HyperShadeEd $material;
+	nodeReleaseCallback collection1HyperShadeEd $material none;
+	select -r $material;
+	hyperShadePanelMenuCommand("hyperShadePanel1", "frameSelected");
+			
+}
+	
+	

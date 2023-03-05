@@ -1,0 +1,13 @@
+/**********************************************************************************************
+Procedure: mh_fitRangeToAnimation()
+Version:1.5
+Date: 10-20-08
+Description: This procedure will print the attributes of a selected node to the script history window.
+**********************************************************************************************/
+
+global proc mh_fitRangeToAnimation()
+{
+	selectKey -time ":";
+	float $allKeys[] = sort(`keyframe -q -sl`);
+	playbackOptions -min $allKeys[0] -max $allKeys[(size($allKeys) -1)];
+}

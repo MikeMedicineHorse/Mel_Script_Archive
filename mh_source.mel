@@ -1,0 +1,30 @@
+/**********************************************************************************************
+Procedure: mh_source()
+Version: 1.0
+Date: 12-17-09
+Description: This procedure will source a script from the default script path
+**********************************************************************************************/
+
+
+global proc mh_source(string $userScript)
+{
+	//call all the script paths
+	string $scriptPath = `getenv "MAYA_SCRIPT_PATH"`;
+
+	//initialize the buffer variable for used in the token command
+	string $buffer[];
+			
+	//tokenize list for sorting script paths into the $buffer variable
+	$numTokens = `tokenize $scriptPath ";" $buffer`;
+	
+	//initialize source directory string
+	string $sourceDir ;
+	
+	//check through each directory for the script.  If it exists then source it.
+	for($i=0; $i<size($buffer); $i++) {
+		if (`file -q -ex ("\"" + $buffer[$i] + "/" + $userScript + "\"")`){
+			//$sourceDir = ("\"" + $buffer[$i] + "/" + $userScript + "\"") ;	
+			eval ( "source" + " " + "\"" + $buffer[$i] + "/" + $userScript + "\"") ;
+		}
+	}
+}

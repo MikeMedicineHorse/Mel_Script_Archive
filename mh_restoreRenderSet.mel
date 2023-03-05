@@ -1,0 +1,55 @@
+/**********************************************************************************************
+Procedure: mh_restoreRenderSet()
+Version: 1.0
+Date: 05-08-09
+Description: This procedure will restore the renderset from the selected node
+**********************************************************************************************/
+
+global proc mh_restoreRenderSet()
+{
+	//make all layers NOT renderable for a clean selection
+	mh_deselectAllRenderLayers ;
+	
+	//grab the user selection for good form 
+	string $userSelection[] = `ls -sl` ; 
+	
+	if (size ($userSelection) > 1){
+		error "Select only one object please" ;
+	}
+	
+	//declare the master group variable
+	$medMasterGroup = "Med_RenderSets" ;
+	
+	//Retain current layer for animator
+	string $userCurrentLayer = `editRenderLayerGlobals -q -currentRenderLayer`;
+	
+	//add render layers to string array
+	string $layers[] = `ls -type "renderLayer"`;
+	
+	string $layersSize = size ($layers);
+	
+	//declare the attribute variable
+	string $attrs[] ;
+
+	//populate the variable with the custom attrs from the selection
+	$attrs = `listAttr -ud $userSelection` ;
+
+	//initialize the renderlayer variable
+	string $renderLayer ;
+	
+	//loop through the layers and add attrs if they are renderable
+	for ($i = 0; $i < size ($attrs); $i++){	
+		$renderLayer = `getAttr ($userSelection[0] + "." + $attrs[$i])` ;
+		if (`objExists $renderLayer`){
+			editRenderLayerGlobals -currentRenderLayer $renderLayer;
+			setAttr ($renderLayer + ".renderable") 1 ;
+		}
+	}
+			
+	//restore the user selection 
+	editRenderLayerGlobals -currentRenderLayer $userCurrentLayer;
+	select -r $userSelection ;	
+
+}
+
+

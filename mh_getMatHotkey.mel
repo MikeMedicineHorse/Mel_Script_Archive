@@ -1,0 +1,43 @@
+/**********************************************************************************************
+Procedure: mh_medHotkey()
+Version: 1.0
+Date: 05-08-09
+Description: This procedure will setup hotkeys for the med menu
+**********************************************************************************************/
+
+global proc mh_getMatHotkey()
+{
+	nameCommand 
+		-annotation "getMaterial" 
+		-command "mh_getMaterial"
+		mh_getMaterial ;
+	
+	if ((`hotkey -query -ctl "X"`) == 0 ){
+		hotkey -k "X" -ctl -name "mh_getMaterial" ;
+	}else{
+		print "Control + Shift + \"X\" already assigned to another command.\r" ;
+	}
+
+
+	print "Hotkey setup complete. See script editor for details.\r" ;
+		
+}
+		
+
+	 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,2057 @@
+/**********************************************************************************************
+Procedure: mh_toolBox()
+Version: 1.0
+Date: 07-01-10
+Description: This procedure launches the UI for medley's tools
+**********************************************************************************************/
+
+
+
+global proc mh_toolBox()
+{
+	mh_medMenu ;
+	
+	// VARIABLES
+	//
+	// -----------------------------------------------------------------
+	// SUFFIX LIST
+	//
+	//	If you want to add, modify, remove or do anything else to the list of suffixes, simply add it to this
+	//	list.
+	//------------------------------------------------------------------
+	global string $gSuffix[];
+
+	clear $gSuffix;
+
+	$gSuffix = { 
+		"circle",	    	// standard circle
+		"circleX",	    	// circle oriented in X direction
+		"circleZ",	        // circle oriented in Z direction
+		"cross",	    	// cross shape
+		"square",	    	// square shape
+		"cube",		        // cube shape
+		"sphere",		    // sphere shape
+		"fancyCross",	        // implicitSphere shape
+		"locator",   	    // locator shape
+		"arrowUp",	    	// arrowPointedUp shape
+		"arrowDown",		// arrowPointedDown shape
+		"circleArrow",		// circle with arrows in all directions
+		"circleArrow1",		// circle with arrow in 1 direction
+		"circleArrow2",		// circle with arrow in 2 directions
+		"circleArrow3", 	// circle with arrow in 3 directions
+		"bulb"         	// bulb shape
+	};
+
+	global string $gSuffixRot[];
+	clear $gSuffixRot ;
+
+	$gSuffixRot = { 
+		"xyz",	   
+		"yzx",	    
+		"zxy",	       
+		"xzy",	    
+		"yxz",	   
+		"zyx"		    
+	};		    		
+		
+
+	//------------------------------------------------------------------
+	//------------------------------------------------------------------
+	
+	//ititialize the window name variable
+	$win = "mhToolBoxWindow";
+	
+	//check to see if the window or prefs exist then delete if so
+	if (`window -exists $win`)
+        deleteUI $win;
+        
+	/*  -->>for the user to launch the window how they closed it
+	if (`windowPref -exists $win`){
+			windowPref -remove $win ;
+	}   
+	*/
+	window
+	    -wh 350 435
+	    -title "med ToolBox"
+	    -minimizeButton 0
+	    -maximizeButton 0
+	    -rtf true 
+	    -s 1
+		$win ;
+
+		string $tabs = `tabLayout -innerMarginWidth 5 -innerMarginHeight 5`;
+		
+			string $master_scrollLayout = `scrollLayout` ;
+	
+				string $columnLayoutMaster = `columnLayout`;
+					
+					string $renderPassLayout = `frameLayout -collapsable true
+								-cl 0 
+								-label "Create Render Pass Controls"
+								-width 190` ; 
+						string $renderPassButtons = `columnLayout
+							-columnAttach "both" 5
+							-rowSpacing 10
+							-columnWidth 190` ;
+							
+								button
+									-label "Setup Hires MR Render"
+									-command "mh_basicHiresRender_2009"
+									-annotation "Sets up Mental Ray for High Quality" ;
+										
+								button 
+									-label "Setup Rear DOF Layer"
+									-command "mh_setupRearDOFlayer"
+									-annotation "Sets up Rear DOF layer and shaders. Requires DOF planes to work" ;
+									
+								button 
+									-label "Setup Front DOF Layer"
+									-command "mh_setupFrontDOFlayer"
+									-annotation "Sets up Front DOF layer and shaders. Requires DOF planes to work" ;
+
+								button 
+									-label "Setup 3D Gradient Layer"
+									-command "mh_setup3DGradientLayer"
+									-annotation "Sets up 2 planes parented to the camera controlling a gradient between them" ;
+									
+								button 
+									-label "Setup AO Layer"
+									-command "mh_setupAO"
+									-annotation "Sets up MR ao pass" ;
+
+								button 
+									-label "Setup Non Global AO layer"
+									-command "mh_setupHeroAO"
+									-annotation "Sets up an AO pass for a renderlayer that differs from the masterLayer--helpful for solo beauty passes" ;
+									
+								button 
+									-label "Lum Pass from selection"
+									-command "mh_setupHeroOB"
+									-annotation "Select an object or objects to create a matte" ;
+									
+								button
+								-label "Playback to Render"
+								-command "mh_playbackToRender"
+								-annotation "Sets the render range to the playback range" ;	
+							
+						setParent ..; //backup to FrameLayout
+					setParent ..; //back up to ColumnLayout
+					
+					string $overridePassLayout = `frameLayout -collapsable true
+								-cl 1 
+								-label "Override Tools"
+								-width 230` ; 
+						string $overridePassButtons = `columnLayout
+							-columnAttach "both" 5
+							-rowSpacing 10
+							-columnWidth 230` ;
+
+								button 
+									-label "Set MR subdivision levels"
+									-command "mh_renderSubdiv"
+									-annotation "Let's you set different levels for display/rendering" ;
+
+								separator -style "in" ;
+							
+								button 
+									-label "Enable Cast Shadow On Selected Objects"
+									-command "mh_enableCastShadow"
+									-annotation "Enables Cast Shadow..." ;
+									
+								button 
+									-label "Disable Cast Shadow On Selected Objects"
+									-command "mh_disableCastShadow"
+									-annotation "Disables Cast Shadow..." ;
+									
+								separator -style "in" ;
+								
+								button
+									-label "Enable Raytracing On Selected Objects"
+									-command "mh_enableRaytracing"
+									-annotation "Enables Raytracing..." ;
+										
+								button 
+									-label "Disable Raytracing On Selected Objects"
+									-command "mh_disableRaytracing"
+									-annotation "Disables Primary Visibility..." ;
+									
+								separator -style "in" ;
+								
+								button
+									-label "Enable Primary Visibility On Selected Objects"
+									-command "mh_enablePrimaryVisibility"
+									-annotation "Enables Primary Visibility..." ;
+										
+								button 
+									-label "Disable Primary Visibility On Selected Objects"
+									-command "mh_disablePrimaryVisibility"
+									-annotation "Disables Primary Visibility..." ;
+									
+								separator -style "in" ;
+								
+								button 
+									-label "Enable Motion Blur On Selected Objects"
+									-command "mh_enableMotionBlur"
+									-annotation "Enables Motion Blur on selected objects...nuff said?" ;
+									
+								button 
+									-label "Disable Motion Blur On Selected Objects"
+									-command "mh_disableMotionBlur"
+									-annotation "Disables Motion Blur on selected objects...nuff said?" ;
+									
+								separator -style "in" ;
+								
+									
+								//rowLayout for the channel control buttons
+								string $popControlButtonsZC = `rowLayout -nc 4 -cw4 85 20 20 110` ;
+							
+									//setup the text field for a variable
+								    $mrCheckbox = `checkBox -label "Override On"`;
+								    
+								    //setup the text field for a variable
+								    $mrMin = `textField -w 20`;
+								    //set the default value to 4 divisions
+								    textField -edit -tx "1" $mrMin ;
+								    
+								    //setup the text field for a variable
+								    $mrMax = `textField -w 20`;
+								    //set the default value to 4 divisions
+								    textField -edit -tx "3" $mrMax  ;
+								    
+								    //initialize the button with a call to the textfield on execution
+								    $button20D = `button -l "Override MR AA" -c ("mh_mrAAbutton " + $mrCheckbox + " " + $mrMin + " " + $mrMax)
+											    -annotation "Disables/Enables a MR override for selected objects"`;
+								   						    
+								setParent ..;
+									
+						setParent ..; //backup to FrameLayout
+					setParent ..; //back up to ColumnLayout 
+
+				string $toolsLayout = `frameLayout -collapsable true
+							-cl 1 
+							-label "Renderlayer Tools"
+							-width 190` ; 
+					string $toolsButtons = `columnLayout
+						-columnAttach "both" 5
+						-rowSpacing 10
+						-columnWidth 190`;
+						
+						button 
+							-label "Save Render Layer Selection"
+							-command "mh_saveRenderSet"
+							-annotation "Store the renderable layers in a node for later use" ;
+							
+						button 
+							-label "Restore Render Layer Selection"
+							-command "mh_restoreRenderSet"
+							-annotation "Select a selection object and run this command" ;
+							
+						button 
+							-label "Make All Layers Renderable"
+							-command "mh_selectAllRenderLayers"
+							-annotation "Makes all layers renderable" ;
+							
+						button 
+							-label "Disable Rendering On All Layers"
+							-command "mh_deselectAllRenderLayers"
+							-annotation "Disables all layers for rendering" ;
+						
+						button 
+							-label "Solo Selected Render Layer"
+							-command "mh_soloRenderLayer"
+							-annotation "Solo Selected Render Layer for rendering" ;
+							
+						button 
+							-label "Prefix Render layers"
+							-command "mh_prefixRenderLayer"
+							-annotation "Prefixes Render Layer with user text" ;
+							
+						button
+						 	-label "Delete All Render Layers"
+						 	-command "mh_deleteRenderLayers"
+						 	-annotation "Deletes all render layers and reverts to the masterLayer" ;	
+							
+						setParent ..; //backup to FrameLayout
+					setParent ..; //back up to ColumnLayout
+					
+				
+					string $shaderLayout = `frameLayout -collapsable true
+							-cl 1 
+							-label "Shader Scripts"
+							-width 190` ; 
+						string $shaderButtons = `columnLayout
+							-columnAttach "both" 5
+							-rowSpacing 10
+							-columnWidth 190`;
+							
+													
+							button 
+								-label "med Molecular Shader"
+								-command "mh_medShader"
+								-annotation "This creates a starter material for molecular type scenes" ;
+												
+						
+						 setParent ..; //backup to FrameLayout
+					setParent ..; //back up to ColumnLayout
+					
+				string $utilityLayout = `frameLayout -collapsable true
+							-cl 1 
+							-label "Utility Scripts"
+							-width 190` ; 
+					string $utilityButtons = `columnLayout
+						-columnAttach "both" 5
+						-rowSpacing 10
+						-columnWidth 190`;
+						
+												
+						button 
+							-label "Save Render View Images"
+							-command "mh_saveRender"
+							-annotation "This prompts a dialog to save all the render view images" ;
+							
+						separator -style "in" ;
+
+						button 
+							-label "Mr Texture Manager"
+							-command "mh_mrTextureManager"
+							-annotation "This launches the texture manager for use with SSS related materials" ;
+							
+						separator -style "in" ;
+											
+						button 
+							-label "Set Relative File Textures"
+							-command "mh_setRelLocWin"
+							-annotation "This will make all file textures relative to sourceimages" ;		
+						
+						button 
+							-label "Clear Light Links"
+							-command "mh_clearLightLinksWin"
+							-annotation "Beware--Clears all light links" ;	
+							
+						separator -style "in" ;	
+	
+						button 
+							-label "Replace Material"
+							-command "mh_replaceMaterial"
+							-annotation "Select the material to be swapped then the new material" ;
+						
+						button 
+							-label "Select SG Components"
+							-command "mh_selectSG"
+							-annotation "Selects components of a shading group" ;
+							
+						button 
+							-label "Select SG Material"
+							-command "mh_selectMatSG"
+							-annotation "Selects material of a shading group" ;
+							
+						separator -style "in" ;
+							
+						button 
+							-label "Install med Tools Menu"
+							-command "mh_medMenu"
+							-annotation "Installs the med Tools menu" ;
+							
+						button 
+							-label "Setup hotkeys"
+							-command "mh_medHotkey"
+							-annotation "Installs the med Hotkeys" ;
+						 setParent ..; //backup to FrameLayout
+					setParent ..; //back up to ColumnLayout
+				setParent ..; //back up to Scroll Layout
+			setParent ..; //Back up to tabLayout
+		
+		string $master_scrollLayoutAnim = `scrollLayout` ;	
+			string $columnLayoutMaster = `columnLayout`;
+				string $renameLayout = `frameLayout -collapsable true
+										-cl 1 
+										-label "Object Tools"
+										-width 200` ;
+					string $renameMasterColumnLayout = `columnLayout
+														-columnAttach "both" 5
+														-columnWidth 200
+														-rowSpacing 5`;	 	
+																											 		
+						button 
+							-label "WildCard Select"
+							-command "mh_wildcardSel"
+							-annotation "This lets you select objects based on a shared name or character" ;
+
+						button 
+							-label "Med Find And Replace"
+							-command "mh_findAndReplace"
+							-annotation "Replaces objects and allows for animation transfer" ;
+				    
+						//rowLayout for the channel control buttons
+						string $popControlButtonsX = `rowLayout -nc 2` ;
+					
+						    $button16 = `button -l "Hash Rename" -c "js_hashRenameUI" -ann "Takes selected objects and replaces ## with numbers"`;
+						    $button17 = `button -l "Add Suffix" -c "js_addSuffixWin" -ann "Add a predefined production suffix to selected objects"`;
+						    
+						setParent ..;
+						
+						//rowLayout for the channel control buttons
+						string $popControlButtonsY = `rowLayout -nc 2` ;
+					
+						    $button18 = `button -l "Prefix Names" -c "mh_prefix" -ann "Prefix selected objects"`;
+						    $button19 = `button -l "Replace Names" -c "mh_replace" -ann "Search and Replace Names for selected objects"`;
+						    
+						setParent ..;
+						
+						//rowLayout for the channel control buttons
+						string $popControlButtonsZ = `rowLayout -nc 2` ;
+					
+						    $button20 = `button -l "NameSpacey" -c "zooNameSpacey" -ann "Launches a namespace tool for editing namespaces"`;
+						    $button21 = `button -l "ReplaceName++" -c "js_grepRenameUI" -ann "Search and Replace names...but duplicates too"`;
+						    
+						setParent ..;
+						
+						separator -style "single" ;
+						
+						//rowLayout for the channel control buttons
+						string $popControlButtonsZB = `rowLayout -nc 3 -cw3 40 60 90` ;
+							//description text to the text fielf
+							text -l "Copies:" ;
+							//setup the text field for a variable
+						    $text = `textField -ann "integers only please" `;
+						    //set the default value to 1 copy
+						    textField -edit -tx "1" $text ;
+						    //initialize the button with a call to the textfield on execution
+						    $button20b = `button -l "Smart Duplicate" -c ("mh_smartDuplicate " + $text)
+									      -ann "Smart Duplicate option which creates a duplicate with unique history"`;
+						   						    
+						setParent ..;
+						
+						separator -style "single" ;
+						
+						//rowLayout for the channel control buttons
+						string $popControlButtonsZB = `rowLayout -nc 4 -cw4 33 33 34 90` ;
+					
+							//setup the text field for a variable
+						    $ffdX = `textField -w 20 -ann "FFD subdivs in X"`;
+						    //set the default value to 4 divisions
+						    textField -edit -tx "4" $ffdX  ;
+						    
+						    //setup the text field for a variable
+						    $ffdY = `textField -w 20 -ann "FFD subdivs in Y"`;
+						    //set the default value to 4 divisions
+						    textField -edit -tx "4" $ffdY  ;
+						    
+						    //setup the text field for a variable
+						    $ffdZ = `textField -w 20 -ann "FFD subdivs in Z"`;
+						    //set the default value to 4 divisions
+						    textField -edit -tx "4" $ffdZ  ;
+						    
+						    //initialize the button with a call to the textfield on execution
+						    $button20b = `button -l "Smart Lattice" -c ("mh_smartFFD " + $ffdX + " " + $ffdY + " " + $ffdZ)
+									      -ann "Creates a lattice on selected objects which can be scaled and transformed"`;
+						   						    
+						setParent ..;
+						
+						button
+							-label "Create group control" 
+							-command "mh_createGroupControl"
+							-annotation "Creats a new group parent of the selected objects for animation setup" ; 
+							
+					setParent ..; 
+				setParent ..;
+				string $renderPassLayout = `frameLayout -collapsable true
+										-cl 0 
+										-label "Create Animation Controller"
+										-width 210` ; 	 	
+					string $AnimMasterColumnLayout = `columnLayout
+														-columnAttach "both" 5
+														-columnWidth 500
+														-rowSpacing 5 "is it me"`;					 
+												    
+			
+					    //create the option menu group here
+					    $omg = `optionMenuGrp -cw 1 50 -l "Shape:" -ann "Pick a predefined shape for an animation controller curve"`;
+					    
+					    //populate the item list based on the $gSuffix variable
+					    for ($item in $gSuffix){
+					        menuItem -l $item;
+					    }
+					    
+					    //create teh option menu group here
+					    $omgRot = `optionMenuGrp -cw 1 50 -l "rotOrder:" -ann "Setup a default rotation order--ZXY if not sure"`;
+					    
+					    //populate the item list based on the $gSuffix variable
+					    for ($itemRot in $gSuffixRot){
+					        menuItem -l $itemRot ;
+					    }
+					    optionMenuGrp -e
+					    	-sl 3
+					    	$omgRot;   
+						    //rowLayout for the buttons
+							string $animControlButtons = `rowLayout -nc 2` ;
+						
+							    $button = `button -l "Create Controller" -c ("mh_createControlGet " + $omg + " " + $omgRot)
+										    -ann "creates a curve controller on selected objects with the above settings" `;
+							    //This button removes the anim Controls
+							    $button2 = `button -l "Remove Controller" -c "mh_removeAnimController"
+											-ann "removes controller shape from selected objects"`;
+							    setParent ..;
+							   
+							    rowLayout -nc 2 ;
+							    $button3 = `button -l "Edit Controller CVs" -c "mh_editControllerCvs"
+										    -ann "this makes the cvs of the control editable"`;
+							    $button4 = `button -l "Update Rot Order" -c ("mh_rotationOrderGet " + $omg + " " + $omgRot)
+										    -ann "this will refresh the rotation order of the selected objects if changed in the UI"`;
+							    				  	
+						    setParent ..; //up to Column layout
+			    	setParent ..; //upto FrameLayout
+		    	setParent ..; //up to Column
+		    	
+				separator -style "none";		   	
+			    
+			    //text -label "Channel Box Tools";
+			    
+			    separator -style "none";
+			    
+			    string $channelLayout = `frameLayout -collapsable true
+										-cl 0 
+										-label "Channel Box Tools"
+										-width 210` ;
+					string $channelMasterColumnLayout = `columnLayout
+														-columnAttach "both" 5
+														-columnWidth 200
+														-rowSpacing 5`;	 	
+				    
+						button
+							-label "Add Attribute" 
+							-command "js_createAddAttrWin"
+							-annotation "Quickly add a keyable attribute to the channel box" ;
+							
+						button
+							-label "Lock And Hide All Attrs" 
+							-command "mh_hideAllChannels"
+							-annotation "Removes all keyable attrs from the channel box" ;
+							
+						button
+							-label "Show All Attrs" 
+							-command "mh_showAllChannels"
+							-annotation "Show all keyable attrs from the channel box" ;
+							
+						button
+							-label "Translate-Rotate Controller" 
+							-command "mh_transRotateController"
+							-annotation "Shows translate/rotate in the channel box" ;
+						
+						string $scaleLayout = `frameLayout -collapsable true
+										-cl 1 
+										-label "Scale Channel Tools"
+										-width 200` ;
+							string $scaleMasterColumnLayout = `columnLayout
+														-columnAttach "both" 5
+														-columnWidth 200
+														-rowSpacing 5`;	 			
+											
+								//rowLayout for the channel control buttons
+								string $channelControlButtons = `rowLayout -nc 2` ;
+							
+								    $button5 = `button -l "Lock Scale" -c "mh_lockScale" -ann "Locks the attrs on the selected objects"`;
+								    $button6 = `button -l "Hide Scale" -c "mh_hideScale" -ann "Hides the attrs on the selected objects"`;
+								    
+								setParent ..;
+								
+								string $channelControlButtonsB = `rowLayout -nc 2` ;
+							
+								    $button7 = `button -l "Unlock Scale" -c "mh_unlockScale" -ann "Unlocks the attrs on the selected objects"`;
+								    $button8 = `button -l "Show Scale" -c "mh_showScale" -ann "Shows the attrs on the selected objects"`;
+								    
+								setParent ..;
+							setParent ..;
+						setParent ..;
+						
+						string $visibilityLayout = `frameLayout -collapsable true
+										-cl 1 
+										-label "Visibility Channel Tools"
+										-width 210` ;
+							string $visibilityMasterColumnLayout = `columnLayout
+														-columnAttach "both" 5
+														-columnWidth 200
+														-rowSpacing 5`;	 		
+						
+								string $channelControlButtonsC = `rowLayout -nc 2` ;
+							
+								    $button9 = `button -l "Lock Visibility" -c "mh_lockVisibility" -ann "Locks the attrs on the selected objects"`;
+								    $button10 = `button -l "Hide Visibility" -c "mh_hideVisibility" -ann "Hides the attrs on the selected objects"`;
+								    
+								setParent ..;
+								
+								string $channelControlButtonsD = `rowLayout -nc 2` ;
+							
+								    $button9 = `button -l "Unlock Visibility" -c "mh_unlockVisibility" -ann "Unlocks the attrs on the selected objects"`;
+								    $button10 = `button -l "Show Visibility" -c "mh_showVisibility" -ann "Shows the attrs on the selected objects"`;
+								    
+								setParent ..;
+							setParent ..;
+						setParent ..;
+						
+						string $translateLayout = `frameLayout -collapsable true
+										-cl 1 
+										-label "Translate Channel Tools"
+										-width 210` ;
+							string $translateMasterColumnLayout = `columnLayout
+														-columnAttach "both" 5
+														-columnWidth 200
+														-rowSpacing 5`;	
+						
+								string $channelControlButtonsD = `rowLayout -nc 2` ;
+							
+								    $button11 = `button -l "Lock Translate" -c "mh_lockTranslate" -ann "Locks the attrs on the selected objects"`;
+								    $button12 = `button -l "Hide Translate" -c "mh_hideTranslate" -ann "Hides the attrs on the selected objects"`;
+								    
+								setParent ..;
+								
+								string $channelControlButtonsDA = `rowLayout -nc 2` ;
+							
+								    $buttonTransA = `button -l "Unlock Translate" -c "mh_unlockTranslate" -ann "Unlocks the attrs on the selected objects"`;
+								    $buttonTransB = `button -l "Show Translate" -c "mh_showTranslate" -ann "Shows the attrs on the selected objects"`;
+								    
+								setParent ..;
+							setParent ..; 
+						setParent ..;
+						
+						string $rotateLayout = `frameLayout -collapsable true
+										-cl 1 
+										-label "Rotate Channel Tools"
+										-width 210` ;
+							string $rotateMasterColumnLayout = `columnLayout
+														-columnAttach "both" 5
+														-columnWidth 200
+														-rowSpacing 5`;	
+								string $channelControlButtonsE = `rowLayout -nc 2` ;
+							
+								    $button12 = `button -l "Lock Rotate" -c "mh_lockRotate" -ann "Locks the attrs on the selected objects"`;
+								    $button13 = `button -l "Hide Rotate" -c "mh_hideRotate" -ann "Hides the attrs on the selected objects"`;
+								    
+								setParent ..;
+								
+								string $channelControlButtonsEA = `rowLayout -nc 2` ;
+							
+								    $button12AA = `button -l "Unlock Rotate" -c "mh_unlockRotate" -ann "Unlocks the attrs on the selected objects"`;
+								    $button13AA = `button -l "Show Rotate" -c "mh_showRotate" -ann "Shows the attrs on the selected objects"`;
+								    
+								setParent ..;
+							setParent ..; 
+						//could be OFF	
+						setParent ..;
+					setParent ..;
+				setParent ..; 	
+								
+				separator -style "none";	
+			    
+			    
+		    setParent ..; //up to scroll 	
+		   setParent ..; //up to tab
+		   	   		   
+		   string $Master_scrollLayoutKeyframe = `scrollLayout` ;
+		   		string $animtoolsButtons = `columnLayout
+						-columnAttach "both" 5
+						-rowSpacing 10
+						-columnWidth 230`;	
+						string $toolsLayout = `frameLayout -collapsable true
+												-cl 0 
+												-label "Graph Editor Tools"
+												-width 230` ; 
+					
+							string $toolsButtons = `columnLayout
+								-columnAttach "both" 5
+								-rowSpacing 10
+								-columnWidth 220`;
+								
+								//rowLayout for the channel control buttons
+								string $keyControlButtons = `rowLayout -nc 2` ;
+							
+								    $buttonCopy = `button -l "Copy Keys" -c "mh_copyKey" -ann "Copy selected keys-best used in the graph editor"`;
+								    $buttonPaste = `button -l "Paste Keys" -c "mh_pasteKey" -ann "Paste selected keys-best used in the graph editor"`;
+								    
+								setParent ..;
+								
+								//rowLayout for the channel control buttons
+								string $popControlButtons = `rowLayout -nc 2` ;
+							
+								    $button14 = `button -l "PopFrame Up" -c "mh_createPopFrameUp" 
+											    -ann "create a pop frame up. This frame visible--previous frame hidden" `;
+								    $button15 = `button -l "PopFrame Down" -c "mh_createPopFrameDown"
+											    -ann "create a pop frame down. This frame hidden--previous frame visible"`;
+								    
+								setParent ..;
+								
+											
+							button 
+								-label "Reverse Selected Keys"
+								-command "mh_reverseSelectedKeys"
+								-annotation "Ctl+Shift+R : Mirrors selected keys at the midpoint of the selection" ;
+								
+							separator -style "in" ;
+							
+							button
+								-label "Fit Playblack Range To Selected Objects"
+								-command "mh_fitRangeToAnimation"
+								-annotation "Focuses the playblack range to the selected object--doesn't work on selected keys" ;	
+								
+							button
+								-label "Fit Playblack Range To All Animation"
+								-command "mh_fitRangeToAllAnimation"
+								-annotation "Focuses the playblack range to all animated objects--doesn't work on selected keys" ;	
+								
+							button
+								-label "Set Render Range To Playback Range"
+								-command "mh_playbackToRender"
+								-annotation "Sets the render range to the playback range" ;	
+								
+							separator -style "in" ;
+								
+							button
+								-label "Select All Animated Nodes"
+								-command "mh_selectAllAnimated"
+								-annotation "Ctl+Alt+Shift+A : Selects all animated nodes in scene." ;
+									
+							button 
+								-label "Select Animated Child Nodes"
+								-command "mh_selectAnimated"
+								-annotation "Ctl+Shift+A : Selects any animated child nodes of the selected object" ;
+								
+							button 
+								-label "Select Object From Graph Editor"
+								-command "mh_selectGraphObject"
+								-annotation "Ctl+Shift+S : Converts graph selection to outliner selection" ;
+								
+							separator -style "in" ;
+								
+							button 
+								-label "Setup hotkeys"
+								-command "mh_medAnimHotkey"
+								-annotation "Installs the med Animation Hotkeys" ;
+							setParent ..; //up to frame
+					setParent ..; //up to column		
+						
+				setParent ..; //up to scroll
+		   
+		   setParent ..; //up to tab
+		  		   
+		   string $master_medTools = `scrollLayout` ;
+		   		string $toolsButtons = `columnLayout
+						-columnAttach "both" 5
+						-rowSpacing 10
+						-columnWidth 220`;
+						
+					string $deformerLayout = `frameLayout -collapsable true
+												-cl 1 
+												-label "Deformer Tools"
+												-width 220` ; 
+				
+						string $deformerButtons = `columnLayout
+							-columnAttach "both" 5
+							-rowSpacing 10
+							-columnWidth 200`;
+						button
+								-label "med Noise Deformer"
+								-command "deformer -type medNoise"
+								-annotation "Creates the med Noise Deformer" ;
+								
+						button
+								-label "Paint Noise Weights"
+								-command "jh_createNoiseWeight"
+								-annotation "Paint Vertex Weights for the Noise Deformer of the Selected Geometry" ;
+								
+						button
+								-label "Toggle Noise Deformers"
+								-command "jh_toggleNoiseDeformers"
+								-annotation "Enable / Disable all of the Noise Deformers in the Scene" ;
+						setParent ..;
+					setParent ..; 
+				string $groupLayout = `frameLayout -collapsable true
+												-cl 1 
+												-label "Transform Tools"
+												-width 220` ; 
+					
+					string $groupButtons = `columnLayout
+						-columnAttach "both" 5
+						-rowSpacing 10
+						-columnWidth 200`;		
+		
+						button
+								-label "smartGroup"
+								-command "mh_smartGroup"
+								-annotation "Ctl+Shift+G | Groups the selected objects with accurate transforms-not 0,0,0" ;
+								
+						button
+								-label "fix Maya group pivot"
+								-command "mh_fixGroupPivot"
+								-annotation "Shift+Alt+G | Fixes the transform of the group to read accurate space values-not 0,0,0" ;
+								
+						button
+								-label "Center to selected objects"
+								-command "mh_centerToObject"
+								-annotation "Shift+Alt+C | Just like center to parent in C4D. Select target first then object to be moved" ;
+														
+						button
+								-label "Random Rotation"
+								-command "mh_randRotation"
+								-annotation "Shift+Alt+R | Select Objects for random rotation" ;
+								
+						button
+								-label "Create Random Rotation with group"
+								-command "mh_randRotationGrp"
+								-annotation "Select Objects for random rotation. Creates a group for each obj as well" ;
+								
+					setParent ..; 
+				setParent ..;
+						
+				string $cameraLayout = `frameLayout -collapsable true
+												-cl 1 
+												-label "Camera Tools"
+												-width 220` ; 
+					
+					string $cameraButtons = `columnLayout
+						-columnAttach "both" 5
+						-rowSpacing 10
+						-columnWidth 200`;
+						
+						button
+								-label "Create Gimbal Camera"
+								-command "mh_gimbalCam"
+								-annotation "Creates a camera rig designed for smoother moves...and less headaches" ;
+				
+						button
+								-label "Create Target Camera"
+								-command "mh_createCameraTarget"
+								-annotation "Creates a simple target camera" ;
+								
+						button
+								-label "Create Camera from Current View"
+								-command "mh_createViewCam"
+								-annotation "Creates a camera from the current view" ;
+					setParent ..; 
+				setParent ..;
+				
+				string $lightLayout = `frameLayout -collapsable true
+												-cl 1 
+												-label "Lighting Tools"
+												-width 220` ; 
+					
+					string $lightButtons = `columnLayout
+						-columnAttach "both" 5
+						-rowSpacing 10
+						-columnWidth 200`;		
+						
+						button
+								-label "Create Area Light"
+								-command "mh_createAreaLightTgt"
+								-annotation "Creates a medley area light with a target" ;
+								
+					setParent ..;
+				setParent ..;
+				
+				string $componentLayout = `frameLayout -collapsable true
+												-cl 1 
+												-label "Modeling Tools"
+												-width 250` ; 
+					
+					string $componentButtons = `columnLayout
+						-columnAttach "both" 5
+						-rowSpacing 10
+						-columnWidth 200`;	
+						
+						button
+								-label "Select Connected"
+								-command "mh_selectConnected"
+								-annotation "Ctl+] | Selects connected Polys/Verts/Edges" ;
+								
+						button
+								-label "Center Axis to Component Selection"
+								-command "mh_centerAxisSelection"
+								-annotation "Requires a componenet selection. Will center the axis to those components" ;
+								
+						button
+								-label "Hard Edge Normals"
+								-command "mh_hardenEdge"
+								-annotation "Hardens the poly edge with no history applied--if shape has no inputs" ;
+								
+						button
+								-label "Soften Normals"
+								-command "mh_softenEdge"
+								-annotation "Softens the poly edge with no history applied--if shape has no inputs" ;
+								
+						//rowLayout for the channel control buttons
+						string $popControlButtonsZCD = `rowLayout -nc 3 -cw3 30 40 140` ;
+						
+						text -l "Angle" ;
+					    
+					    //setup the text field for a variable
+					    $softenAngle = `textField -w 40`;
+					    //set the default value to 4 divisions
+					    textField -edit -tx "180" $softenAngle  ;
+					    
+					    //initialize the button with a call to the textfield on execution
+					    $button20DE = `button -w 120 -l "Soften Normals" -c ("mh_softenButton " + $softenAngle)
+								    -annotation "Softens the poly edge with Angle and no history applied--if shape has no inputs"`;
+						   						    
+						setParent ..;
+					setParent ..;
+				setParent ..;
+						
+				setParent ..; //up to scroll
+		   
+		   setParent ..; //up to tab
+		   	    
+		tabLayout -edit	-tabLabel $master_scrollLayout "RenderTools" -tabLabel $master_scrollLayoutAnim "Setup Tools"
+						-tabLabel $Master_scrollLayoutKeyframe "Animation Tools" -tabLabel $master_medTools "med Tools" 
+		 			$tabs;
+		
+	  
+	  showWindow $win ;
+}
+
+global proc mh_editControllerCvs()
+{
+	string $userSelection[] = `ls -sl`;
+	if (size ($userSelection) > 1){
+		error "Please select only 1 curve to edit at a time" ;
+	}
+	else{
+   	 	SelectCurveCVsAll;
+		selectCurveCV all;
+	}
+
+}
+
+global proc mh_prefix()
+{
+	PrefixHierarchyNames;
+}
+
+global proc mh_copyKey()
+{
+	copyKey -animation keysOrObjects ;
+}
+
+global proc mh_pasteKey()
+{
+	$currentTime = `currentTime -q` ;
+	pasteKey -time $currentTime -option merge ;	
+}
+
+global proc mh_replace()
+{
+	performSearchReplaceNames 1;
+
+}
+
+global proc mh_clearLightLinksWin()
+{
+	string $result = `confirmDialog
+							-title "Clear Light Links"
+							-message "This will clear all light links...ok?"
+							-button "OK"
+							-button "Cancel"
+							-defaultButton "OK"
+							-cancelButton "Cancel"
+							-dismissString "Cancel"`;
+							
+	if ($result == "OK"){
+		mh_clearLightLinks ;
+	}
+}
+
+global proc mh_setRelLocWin()
+{
+	string $result = `confirmDialog
+							-title "Set Relative Textures"
+							-message "This will make all file textures sourceimages/image...ok?"
+							-button "OK"
+							-button "Cancel"
+							-defaultButton "OK"
+							-cancelButton "Cancel"
+							-dismissString "Cancel"`;
+							
+	if ($result == "OK"){
+		setRelLoc ;
+	}
+}
+
+global proc mh_createControlGet(string $omg, string $omgRot)
+{
+    $item = `optionMenuGrp -q -v $omg`;
+    $itemRot = `optionMenuGrp -q -sl $omgRot` ;
+    mh_createController $item $itemRot;
+
+}
+
+global proc mh_rotationOrderGet(string $omg, string $omgRot)
+{
+    $item = `optionMenuGrp -q -v $omg`;
+    $itemRot = `optionMenuGrp -q -sl $omgRot` ;
+    mh_updateOrder $item $itemRot;
+
+}
+
+global proc mh_smartDuplicate(string $text)
+{	
+
+	int $copies = `textField -q -tx $text`;
+	
+	//store the user selection
+	string $userSelection[] = `ls -sl`;
+	
+	//filter out the transforms of the current selection
+	string $transforms[] = `ls -sl`;
+	
+	for ($i=0; $i<$copies; ++$i){
+		for ($transform in $transforms){
+			duplicate -un -rc $transform ; 
+		}
+	}
+	
+	
+	select -r $userSelection ; 
+}
+
+global proc mh_smartFFD(string $ffdX, string $ffdY, string $ffdZ)
+{	
+
+	int $copiesX = `textField -q -tx $ffdX`;
+	
+	int $copiesY = `textField -q -tx $ffdY`;
+	
+	int $copiesZ = `textField -q -tx $ffdZ`;
+	
+	//store the user selection
+	string $userSelection[] = `ls -sl`;
+	
+	//filter out the transforms of the current selection
+	string $transforms[] = `ls -sl`;
+	
+	//initialize variable
+	string $ffdBuilder[] ;
+	
+	for ($transform in $transforms){
+			select $transform ;
+			$ffdBuilder = `lattice  -divisions $copiesX $copiesY $copiesZ -cp  -objectCentered true  -ldv 2 2 2`;
+			connectAttr -f ($ffdBuilder[1] + ".translate") ($ffdBuilder[2] + ".translate");
+			connectAttr -f ($ffdBuilder[1] + ".rotate") ($ffdBuilder[2] + ".rotate");
+			connectAttr -f ($ffdBuilder[1] + ".scale") ($ffdBuilder[2] + ".scale");
+			setAttr ($ffdBuilder[2] + ".visibility") 0; 
+		}
+	
+	select -r $userSelection ; 
+}
+
+global proc mh_mrAAbutton(string $mrCheckbox, string $mrMin, string $mrMax)
+{	
+
+	int $toggle = `checkBox -q -v $mrCheckbox`;
+	
+	int $min = `textField -q -tx $mrMin`;
+	
+	int $max = `textField -q -tx $mrMax`;
+	
+	mh_overrideMRAA $toggle $min $max ;
+	
+}
+
+global proc mh_softenButton(string $softenAngle)
+{	
+	
+	float $angle = `textField -q -tx $softenAngle`;
+	
+	mh_softenEdgeCustom $angle;
+	
+}
+
+global proc mh_transRotateController()
+{	
+	//store the user selection
+	string $userSelection[] = `ls -sl`;
+	
+	//filter out the transforms of the current selection
+	string $transforms[] = `ls -sl -type "transform"`;
+
+	for ($transform in $transforms){
+		//disable scale and visibility for keying but keep them unlocked
+		setAttr -lock false -keyable true ($transform + ".tx");
+		setAttr -lock false -keyable true ($transform + ".ty");
+		setAttr -lock false -keyable true ($transform + ".tz");
+		setAttr -lock true -keyable false ($transform + ".sx");
+		setAttr -lock true -keyable false ($transform + ".sy");
+		setAttr -lock true -keyable false ($transform + ".sz");
+		setAttr -lock false -keyable true ($transform + ".rx");
+		setAttr -lock false -keyable true ($transform + ".ry");
+		setAttr -lock false -keyable true ($transform + ".rz");
+		setAttr -lock true -keyable false ($transform + ".v"); 
+	}
+	select -r $userSelection ; 
+}
+
+global proc mh_hideAllChannels()
+{	
+	//store the user selection
+	string $userSelection[] = `ls -sl`;
+	
+	//filter out the transforms of the current selection
+	string $transforms[] = `ls -sl -type "transform"`;
+
+	for ($transform in $transforms){
+		//disable scale and visibility for keying but keep them unlocked
+		setAttr -lock true -keyable false ($transform + ".tx");
+		setAttr -lock true -keyable false ($transform + ".ty");
+		setAttr -lock true -keyable false ($transform + ".tz");
+		setAttr -lock true -keyable false ($transform + ".sx");
+		setAttr -lock true -keyable false ($transform + ".sy");
+		setAttr -lock true -keyable false ($transform + ".sz");
+		setAttr -lock true -keyable false ($transform + ".rx");
+		setAttr -lock true -keyable false ($transform + ".ry");
+		setAttr -lock true -keyable false ($transform + ".rz");
+		setAttr -lock true -keyable false ($transform + ".v"); 
+	}
+	select -r $userSelection ; 
+}
+
+global proc mh_showAllChannels()
+{	
+	//store the user selection
+	string $userSelection[] = `ls -sl`;
+	
+	//filter out the transforms of the current selection
+	string $transforms[] = `ls -sl -type "transform"`;
+
+	for ($transform in $transforms){
+		//disable scale and visibility for keying but keep them unlocked
+		setAttr -lock false -keyable true ($transform + ".tx");
+		setAttr -lock false -keyable true ($transform + ".ty");
+		setAttr -lock false -keyable true ($transform + ".tz");
+		setAttr -lock false -keyable true ($transform + ".sx");
+		setAttr -lock false -keyable true ($transform + ".sy");
+		setAttr -lock false -keyable true ($transform + ".sz");
+		setAttr -lock false -keyable true ($transform + ".rx");
+		setAttr -lock false -keyable true ($transform + ".ry");
+		setAttr -lock false -keyable true ($transform + ".rz");
+		setAttr -lock false -keyable true ($transform + ".v"); 
+	}
+	select -r $userSelection ; 
+}
+
+global proc mh_showScale()
+{	
+	//store the user selection
+	string $userSelection[] = `ls -sl`;
+	
+	//filter out the transforms of the current selection
+	string $transforms[] = `ls -sl -type "transform"`;
+
+	for ($transform in $transforms){
+		//disable scale and visibility for keying but keep them unlocked
+		setAttr -keyable true ($transform + ".sx");
+		setAttr -keyable true ($transform + ".sy");
+		setAttr -keyable true ($transform + ".sz");
+	}
+	select -r $userSelection ; 
+}
+global proc mh_hideScale()
+{	
+	//store the user selection
+	string $userSelection[] = `ls -sl`;
+	
+	//filter out the transforms of the current selection
+	string $transforms[] = `ls -sl -type "transform"`;
+
+	for ($transform in $transforms){
+		//disable scale and visibility for keying but keep them unlocked
+		setAttr -keyable false ($transform + ".sx");
+		setAttr -keyable false ($transform + ".sy");
+		setAttr -keyable false ($transform + ".sz");
+	}
+	select -r $userSelection ; 
+}
+
+global proc mh_lockScale()
+{	
+	//store the user selection
+	string $userSelection[] = `ls -sl`;
+	
+	//filter out the transforms of the current selection
+	string $transforms[] = `ls -sl -type "transform"`;
+
+	for ($transform in $transforms){
+		//disable scale and visibility for keying but keep them unlocked
+		setAttr -lock true ($transform + ".sx");
+		setAttr -lock true ($transform + ".sy");
+		setAttr -lock true ($transform + ".sz");
+	}
+	select -r $userSelection ; 
+}
+
+global proc mh_unlockScale()
+{	
+	//store the user selection
+	string $userSelection[] = `ls -sl`;
+	
+	//filter out the transforms of the current selection
+	string $transforms[] = `ls -sl -type "transform"`;
+
+	for ($transform in $transforms){
+		//disable scale and visibility for keying but keep them unlocked
+		setAttr -lock false ($transform + ".sx");
+		setAttr -lock false ($transform + ".sy");
+		setAttr -lock false ($transform + ".sz");
+	}
+	select -r $userSelection ; 
+}
+
+global proc mh_showVisibility()
+{	
+	//store the user selection
+	string $userSelection[] = `ls -sl`;
+	
+	//filter out the transforms of the current selection
+	string $transforms[] = `ls -sl -type "transform"`;
+
+	for ($transform in $transforms){
+		//disable scale and visibility for keying but keep them unlocked
+		setAttr -keyable true ($transform + ".v");
+	}
+	select -r $userSelection ; 
+}
+
+global proc mh_hideVisibility()
+{	
+	//store the user selection
+	string $userSelection[] = `ls -sl`;
+	
+	//filter out the transforms of the current selection
+	string $transforms[] = `ls -sl -type "transform"`;
+
+	for ($transform in $transforms){
+		//disable scale and visibility for keying but keep them unlocked
+		setAttr -keyable false ($transform + ".v");
+	}
+	select -r $userSelection ; 
+}
+
+global proc mh_lockVisibility()
+{	
+	//store the user selection
+	string $userSelection[] = `ls -sl`;
+	
+	//filter out the transforms of the current selection
+	string $transforms[] = `ls -sl -type "transform"`;
+
+	for ($transform in $transforms){
+		//disable scale and visibility for keying but keep them unlocked
+		setAttr -lock true ($transform + ".v");
+	}
+	select -r $userSelection ; 
+}
+
+global proc mh_unlockVisibility()
+{	
+	//store the user selection
+	string $userSelection[] = `ls -sl`;
+	
+	//filter out the transforms of the current selection
+	string $transforms[] = `ls -sl -type "transform"`;
+
+	for ($transform in $transforms){
+		//disable scale and visibility for keying but keep them unlocked
+		setAttr -lock false ($transform + ".v");
+	}
+	select -r $userSelection ; 
+}
+
+global proc mh_showTranslate()
+{	
+	//store the user selection
+	string $userSelection[] = `ls -sl`;
+	
+	//filter out the transforms of the current selection
+	string $transforms[] = `ls -sl -type "transform"`;
+
+	for ($transform in $transforms){
+		//disable scale and visibility for keying but keep them unlocked
+		setAttr -keyable true ($transform + ".tx");
+		setAttr -keyable true ($transform + ".ty");
+		setAttr -keyable true ($transform + ".tz");
+	}
+	select -r $userSelection ; 
+}
+
+global proc mh_hideTranslate()
+{	
+	//store the user selection
+	string $userSelection[] = `ls -sl`;
+	
+	//filter out the transforms of the current selection
+	string $transforms[] = `ls -sl -type "transform"`;
+
+	for ($transform in $transforms){
+		//disable scale and visibility for keying but keep them unlocked
+		setAttr -keyable false ($transform + ".tx");
+		setAttr -keyable false ($transform + ".ty");
+		setAttr -keyable false ($transform + ".tz");
+	}
+	select -r $userSelection ; 
+}
+
+global proc mh_lockTranslate()
+{	
+	//store the user selection
+	string $userSelection[] = `ls -sl`;
+	
+	//filter out the transforms of the current selection
+	string $transforms[] = `ls -sl -type "transform"`;
+
+	for ($transform in $transforms){
+		//disable scale and visibility for keying but keep them unlocked
+		setAttr -lock true ($transform + ".tx");
+		setAttr -lock true ($transform + ".ty");
+		setAttr -lock true ($transform + ".tz");
+	}
+	select -r $userSelection ; 
+}
+
+global proc mh_unlockTranslate()
+{	
+	//store the user selection
+	string $userSelection[] = `ls -sl`;
+	
+	//filter out the transforms of the current selection
+	string $transforms[] = `ls -sl -type "transform"`;
+
+	for ($transform in $transforms){
+		//disable scale and visibility for keying but keep them unlocked
+		setAttr -lock false ($transform + ".tx");
+		setAttr -lock false ($transform + ".ty");
+		setAttr -lock false ($transform + ".tz");
+	}
+	select -r $userSelection ; 
+}
+
+global proc mh_showRotate()
+{	
+	//store the user selection
+	string $userSelection[] = `ls -sl`;
+	
+	//filter out the transforms of the current selection
+	string $transforms[] = `ls -sl -type "transform"`;
+
+	for ($transform in $transforms){
+		//disable scale and visibility for keying but keep them unlocked
+		setAttr -keyable true ($transform + ".rx");
+		setAttr -keyable true ($transform + ".ry");
+		setAttr -keyable true ($transform + ".rz");
+	}
+	select -r $userSelection ; 
+}
+
+global proc mh_hideRotate()
+{	
+	//store the user selection
+	string $userSelection[] = `ls -sl`;
+	
+	//filter out the transforms of the current selection
+	string $transforms[] = `ls -sl -type "transform"`;
+
+	for ($transform in $transforms){
+		//disable scale and visibility for keying but keep them unlocked
+		setAttr -keyable false ($transform + ".rx");
+		setAttr -keyable false ($transform + ".ry");
+		setAttr -keyable false ($transform + ".rz");
+	}
+	select -r $userSelection ; 
+}
+
+global proc mh_lockRotate()
+{	
+	//store the user selection
+	string $userSelection[] = `ls -sl`;
+	
+	//filter out the transforms of the current selection
+	string $transforms[] = `ls -sl -type "transform"`;
+
+	for ($transform in $transforms){
+		//disable scale and visibility for keying but keep them unlocked
+		setAttr -lock true ($transform + ".rx");
+		setAttr -lock true ($transform + ".ry");
+		setAttr -lock true ($transform + ".rz");
+	}
+	select -r $userSelection ; 
+}
+
+global proc mh_unlockRotate()
+{	
+	//store the user selection
+	string $userSelection[] = `ls -sl`;
+	
+	//filter out the transforms of the current selection
+	string $transforms[] = `ls -sl -type "transform"`;
+
+	for ($transform in $transforms){
+		//disable scale and visibility for keying but keep them unlocked
+		setAttr -lock false ($transform + ".rx");
+		setAttr -lock false ($transform + ".ry");
+		setAttr -lock false ($transform + ".rz");
+	}
+	select -r $userSelection ; 
+}
+
+global proc mh_createController(string $item, string $itemRot)
+{
+	global string $gSuffix[];
+	
+	//curveShape
+	string $controlShape[] ; 
+	
+	//print $itemRot ; 
+	int $rotOrderInt ;
+	$rotOrderInt = $itemRot ;
+	//print $rotOrderInt ;
+	
+	//store the user selection
+	string $userSelection[] = `ls -sl`;
+	
+	//filter out the transforms of the current selection
+	string $transforms[] = `ls -sl -type "transform"`;
+
+	for ($transform in $transforms){
+		//disable scale and visibility for keying but keep them unlocked
+		setAttr -lock false -keyable false ($transform + ".sx");
+		setAttr -lock false -keyable false ($transform + ".sy");
+		setAttr -lock false -keyable false ($transform + ".sz");
+		setAttr -lock false -keyable false ($transform + ".v");
+		
+		//!!!Need to write rotation order grab functionality--done 4:10pm
+		/*set rotatation order to ZXY-->  Y being the import axis that carries all and z twist happening last
+		0 xyz
+		1 yzx
+		2 zxy
+		3 xzy
+		4 yxz
+		5 zyx
+		*/
+				
+		setAttr ($transform + ".rotateOrder") ($rotOrderInt - 1 );
+		
+		
+
+		//the rest of this script may be replaced with a custom node type or shape.
+		//to do so, create a .ma file containing the desired shape. Replace
+		//these lines with the new shape definition 
+		//***start replacement
+		
+		switch ($item){
+	    	case "circle":
+			$controlShape = `circle -c 0 0 0 -nr 0 1 0 -sw 360 -r 1 -d 3 -ut 0 -tol 0.01 -s 8 -ch 0 -n ($transform + "_animCtrl_Med") `;
+			break ;
+			
+			case "circleX":
+			$controlShape = `circle -c 0 0 0 -nr 1 0 0 -sw 360 -r 1 -d 3 -ut 0 -tol 0.01 -s 8 -ch 0 -n ($transform + "_animCtrl_Med") `;
+			break ;
+			
+			case "circleZ":
+			$controlShape = `circle -c 0 0 0 -nr 0 0 1 -sw 360 -r 1 -d 3 -ut 0 -tol 0.01 -s 8 -ch 0 -n ($transform + "_animCtrl_Med") `;
+			break ;
+			
+			case "cross":
+			$controlShapeSingle = `curve -d 1 -p 1 0 -1 -p 2 0 -1 -p 2 0 1 -p 1 0 1 -p 1 0 2 -p -1 0 2 -p -1 0 1 -p -2 0 1 -p -2 0 -1 -p -1 0 -1 -p -1 0 -2 -p 1 0 -2 -p 1 0 -1 -k 0 -k 1 -k 2 -k 3 -k 4 -k 5 -k 6 -k 7 -k 8 -k 9 -k 10 -k 11 -k 12 -n ($transform + "_animCtrl_Med")`;
+			//since the curve command doesn't return an array I'm ghetto hacking it here
+			//select the new node
+			select $controlShapeSingle ; 
+			//convert the selection array to the variable array we need to continue
+			$controlShape = `ls -sl` ;
+			break ;
+			
+			case "square":
+			$controlShapeSingle = `curve -d 1 -p -1 0 1 -p 1 0 1 -p 1 0 -1 -p -1 0 -1 -p -1 0 1 -k 0 -k 1 -k 2 -k 3 -k 4 -n "square#"`;
+			//since the curve command doesn't return an array I'm ghetto hacking it here
+			//select the new node
+			select $controlShapeSingle ; 
+			//convert the selection array to the variable array we need to continue
+			$controlShape = `ls -sl` ;
+			break ;
+			
+			case "cube":
+			$controlShapeSingle = `curve -d 1 -p -0.5 0.5 0.5 -p 0.5 0.5 0.5 -p 0.5 0.5 -0.5 -p -0.5 0.5 -0.5 -p -0.5 0.5 0.5 -p -0.5 -0.5 0.5 -p -0.5 -0.5 -0.5 -p 0.5 -0.5 -0.5 -p 0.5 -0.5 0.5 -p -0.5 -0.5 0.5 -p 0.5 -0.5 0.5 -p 0.5 0.5 0.5 -p 0.5 0.5 -0.5 -p 0.5 -0.5 -0.5 -p -0.5 -0.5 -0.5 -p -0.5 0.5 -0.5 -k 0 -k 1 -k 2 -k 3 -k 4 -k 5 -k 6 -k 7 -k 8 -k 9 -k 10 -k 11 -k 12 -k 13 -k 14 -k 15 -n "cube#"`;
+			//since the curve command doesn't return an array I'm ghetto hacking it here
+			//select the new node
+			select $controlShapeSingle ; 
+			//convert the selection array to the variable array we need to continue
+			$controlShape = `ls -sl` ;
+			break ;
+			
+			case "sphere":
+			$controlShapeSingle = `curve -d 1 -p 0 3 0 -p 0 2 -2 -p 0 0 -3 -p 0 -2 -2 -p 0 -3 0 -p 0 -2 2 -p 0 0 3 -p 0 2 2 -p 0 3 0 -p 2 2 0 -p 3 0 0 -p 2 -2 0 -p 0 -3 0 -p -2 -2 0 -p -3 0 0 -p -2 2 0 -p 0 3 0 -k 0 -k 1 -k 2 -k 3 -k 4 -k 5 -k 6 -k 7 -k 8 -k 9 -k 10 -k 11 -k 12 -k 13 -k 14 -k 15 -k 16 -n "sphere#"`;
+			//since the curve command doesn't return an array I'm ghetto hacking it here
+			//select the new node
+			select $controlShapeSingle ; 
+			//convert the selection array to the variable array we need to continue
+			$controlShape = `ls -sl` ;
+			break ;
+			
+			case "fancyCross":
+			$controlShapeSingle = `curve -d 3 -p 0.0959835 0.604001 -0.0987656 -p 0.500783 0.500458 -0.0987656 -p 0.751175 0.327886 -0.0987656 -p 0.751175 0.327886 -0.0987656 -p 0.751175 0.327886 -0.336638 -p 0.751175 0.327886 -0.336638 -p 1.001567 0 0 -p 1.001567 0 0 -p 0.751175 0.327886 0.336638 -p 0.751175 0.327886 0.336638 -p 0.751175 0.327886 0.0987656 -p 0.751175 0.327886 0.0987656 -p 0.500783 0.500458 0.0987656 -p 0.0959835 0.604001 0.0987656 -p 0.0959835 0.604001 0.0987656 -p 0.0959835 0.500458 0.500783 -p 0.0959835 0.327886 0.751175 -p 0.0959835 0.327886 0.751175 -p 0.336638 0.327886 0.751175 -p 0.336638 0.327886 0.751175 -p 0 0 1.001567 -p 0 0 1.001567 -p -0.336638 0.327886 0.751175 -p -0.336638 0.327886 0.751175 -p -0.0959835 0.327886 0.751175 -p -0.0959835 0.327886 0.751175 -p -0.0959835 0.500458 0.500783 -p -0.0959835 0.604001 0.0987656 -p -0.0959835 0.604001 0.0987656 -p -0.500783 0.500458 0.0987656 -p -0.751175 0.327886 0.0987656 -p -0.751175 0.327886 0.0987656 -p -0.751175 0.327886 0.336638 -p -0.751175 0.327886 0.336638 -p -1.001567 0 0 -p -1.001567 0 0 -p -0.751175 0.327886 -0.336638 -p -0.751175 0.327886 -0.336638 -p -0.751175 0.327886 -0.0987656 -p -0.751175 0.327886 -0.0987656 -p -0.500783 0.500458 -0.0987656 -p -0.0959835 0.604001 -0.0987656 -p -0.0959835 0.604001 -0.0987656 -p -0.0959835 0.500458 -0.500783 -p -0.0959835 0.327886 -0.751175 -p -0.0959835 0.327886 -0.751175 -p -0.336638 0.327886 -0.751175 -p -0.336638 0.327886 -0.751175 -p 0 0 -1.001567 -p 0 0 -1.001567 -p 0.336638 0.327886 -0.751175 -p 0.336638 0.327886 -0.751175 -p 0.0959835 0.327886 -0.751175 -p 0.0959835 0.327886 -0.751175 -p 0.0959835 0.500458 -0.500783 -p 0.0959835 0.604001 -0.0987656 -k 0 -k 0 -k 0 -k 1 -k 2 -k 3 -k 4 -k 5 -k 6 -k 7 -k 8 -k 9 -k 10 -k 11 -k 12 -k 13 -k 14 -k 15 -k 16 -k 17 -k 18 -k 19 -k 20 -k 21 -k 22 -k 23 -k 24 -k 25 -k 26 -k 27 -k 28 -k 29 -k 30 -k 31 -k 32 -k 33 -k 34 -k 35 -k 36 -k 37 -k 38 -k 39 -k 40 -k 41 -k 42 -k 43 -k 44 -k 45 -k 46 -k 47 -k 48 -k 49 -k 50 -k 51 -k 52 -k 53 -k 53 -k 53 -n "orient#"` ;
+			//since the curve command doesn't return an array I'm ghetto hacking it here
+			//select the new node
+			select $controlShapeSingle ; 
+			//convert the selection array to the variable array we need to continue
+			$controlShape = `ls -sl` ;
+			break ;
+			
+			case "locator":
+			createNode transform -n "curve_loc";
+			createNode nurbsCurve -n "curve_locShape#" -p "curve_loc";
+				setAttr -k off ".v";
+				setAttr ".cc" -type "nurbsCurve" 
+					1 7 0 no 3
+					8 0 1 2 3 4 5 6 7
+					8
+					0 1 0
+					0 -1 0
+					0 0 0
+					0 0 -1
+					0 0 1
+					0 0 0
+					1 0 0
+					-1 0 0;				
+			select "curve_loc" ; 
+			$controlShape = `ls -sl` ;
+			break ;
+			
+			case "arrowUp":
+			createNode transform -n "arrow_curve";
+			createNode nurbsCurve -n "arrow_curveShape#" -p "arrow_curve";
+				setAttr -k off ".v";
+				setAttr ".cc" -type "nurbsCurve" 
+					1 7 0 no 3
+					8 0 1 2 3 4 5 6 7
+					8
+					-1 -0.0020784861950406963 0
+					-1 2.9979215138049593 0
+					-2 2.9979215138049593 0
+					0 4.9979215138049593 0
+					2 2.9979215138049593 0
+					1 2.9979215138049593 0
+					1 -0.0020784861950406963 0
+					-1 -0.0020784861950406963 0
+					;
+	
+			select "arrow_curve" ; 
+			$controlShape = `ls -sl` ;
+			break ;
+			
+			case "arrowDown":
+			$controlShapeSingle = `curve -d 1 -p 0 0.6724194 0.4034517 -p 0 0 0.4034517 -p 0 0 0.6724194 -p 0 -0.4034517 0 -p 0 0 -0.6724194 -p 0 0 -0.4034517 -p 0 0.6724194 -0.4034517 -p 0 0.6724194 0.4034517 -k 0 -k 1 -k 2 -k 3 -k 4 -k 5 -k 6 -k 7 -n "arrow#"` ;
+			//since the curve command doesn't return an array I'm ghetto hacking it here
+			//select the new node
+			select $controlShapeSingle ; 
+			//convert the selection array to the variable array we need to continue
+			$controlShape = `ls -sl` ;
+			break ;
+			
+			case "circleArrow":
+			createNode transform -n "circleArrow";
+			setAttr ".t" -type "double3" 8.2068715989685629e-033 0 0 ;
+			setAttr ".r" -type "double3" 90.000000000000014 89.999999999999986 0 ;
+			createNode nurbsCurve -n "circleArrowShape#" -p "circleArrow";
+				setAttr -k off ".v";
+				setAttr ".cc" -type "nurbsCurve" 
+					3 86 0 no 3
+					91 15.745750770000001 15.745750770000001 15.745750770000001 15.994336930000003
+					 15.994336930000003 15.994336930000003 16.994336930000003 16.994336930000003 16.994336930000003
+					 17.994336930000003 17.994336930000003 17.994336930000003 18.994336930000003 18.994336930000003
+					 18.994336930000003 19.994336930000003 19.994336930000003 19.994336930000003 20.253014204999999
+					 20.253014204999999 20.253014204999999 20.885202120000002 21.502214874 21.502214874
+					 21.502214874 21.758286319 21.758286319 21.758286319 22.758286319 22.758286319 22.758286319
+					 23.758286319 23.758286319 23.758286319 24.758286319 24.758286319 24.758286319 25.758286319
+					 25.758286319 25.758286319 26.014851714999999 26.014851714999999 26.014851714999999
+					 26.633484611 27.244006168999999 27.244006168999999 27.244006168999999 27.495894292999999
+					 27.495894292999999 27.495894292999999 28.495894292999999 28.495894292999999 28.495894292999999
+					 29.495894292999999 29.495894292999999 29.495894292999999 30.495894292999999 30.495894292999999
+					 30.495894292999999 31.495894292999999 31.495894292999999 31.495894292999999 31.758026582999999
+					 31.758026582999999 31.758026582999999 32.371381249000002 32.991210664 32.991210664
+					 32.991210664 33.247937673999999 33.247937673999999 33.247937673999999 34.247937673999999
+					 34.247937673999999 34.247937673999999 35.247937673999999 35.247937673999999 35.247937673999999
+					 36.247937673999999 36.247937673999999 36.247937673999999 37.247937673999999 37.247937673999999
+					 37.247937673999999 37.502186903999998 37.502186903999998 37.502186903999998 38.121090553499997
+					 38.742038981499995 38.742038981499995 38.742038981499995
+					89
+					0.48481411722005902 -1.5777022297396628 2.3880375840419999e-033
+					0.48481411722005896 -1.6982203094531867 9.7785171956538119e-032
+					0.48481411722005896 -1.8187383891667115 9.7367889836241973e-032
+					0.48481411722005902 -1.9392564688802361 2.1598299521558866e-032
+					0.64641882296007858 -1.9392564688802365 5.5614528293260534e-032
+					0.80802352870009819 -1.9392564688802363 -1.1770052747498485e-032
+					0.96962823444011792 -1.9392564688802356 -6.5955222537047479e-033
+					0.64641882296007869 -2.2624658803602751 -4.5704895732448615e-032
+					0.32320941148003934 -2.5856752918403147 -1.225515767663973e-032
+					4.444988533740862e-032 -2.9088847033203535 6.7705190295648181e-032
+					-0.32320941148003929 -2.5856752918403147 -4.4126066291151516e-032
+					-0.64641882296007869 -2.2624658803602755 6.4513208385541249e-032
+					-0.96962823444011792 -1.9392564688802361 2.5241063333294307e-032
+					-0.80802352870009819 -1.9392564688802358 -4.2143517707464706e-032
+					-0.64641882296007869 -1.9392564688802354 -1.0920485595597255e-032
+					-0.48481411722005902 -1.9392564688802361 -2.6208063400208822e-032
+					-0.48481411722005907 -1.8138460741562203 -1.6409238336647706e-032
+					-0.48481411722005907 -1.6884356794322051 -2.9865718231326096e-032
+					-0.46821918505073351 -1.5765602995462438 2.7477132120391271e-016
+					-0.72929325533727285 -1.4981891792087632 2.1538552418393932e-016
+					-1.2085906164065217 -1.2178189796511685 7.6053939763851028e-017
+					-1.4913483589964849 -0.74090916161428844 -7.5312225390052204e-017
+					-1.5668153142214165 -0.48481411722005902 -2.4738714836224478e-033
+					-1.6909623657743564 -0.4848141172200589 -2.7809674608482989e-033
+					-1.8151094173272964 -0.48481411722005896 -1.4715715917193923e-032
+					-1.9392564688802361 -0.48481411722005902 -1.9985610853829114e-033
+					-1.9392564688802363 -0.64641882296007869 1.6181909691631043e-032
+					-1.9392564688802363 -0.80802352870009853 5.3898756682200298e-032
+					-1.9392564688802358 -0.96962823444011825 5.3939449575576087e-032
+					-2.2624658803602755 -0.64641882296007858 2.4898358672531762e-032
+					-2.5856752918403147 -0.32320941148003951 3.8535232481336555e-032
+					-2.9088847033203535 -5.5987979570740818e-032 1.2431828804335869e-047
+					-2.5856752918403147 0.32320941148003912 3.3256933833232171e-032
+					-2.2624658803602755 0.64641882296007869 8.5279351367631054e-033
+					-1.9392564688802363 0.96962823444011781 6.9405249385878095e-033
+					-1.9392564688802358 0.80802352870009808 6.9812178319635934e-033
+					-1.9392564688802358 0.64641882296007869 5.6253123954222548e-033
+					-1.9392564688802358 0.48481411722005902 -8.4612011572040913e-034
+					-1.8148699429092809 0.48481411722005907 -1.3551467947145627e-032
+					-1.6904834169383258 0.48481411722005913 -2.6256815778570828e-032
+					-1.5714316576097551 0.48498674826094496 -3.6039417501359204e-016
+					-1.492081469726114 0.73967178137068945 -4.0418512913158553e-016
+					-1.2141120169171189 1.2091793263536312 -4.6373584916860803e-016
+					-0.7458601683379269 1.4884044755663774 -4.5043564676536961e-016
+					-0.48481411722005835 1.5728997134544056 -8.9810551641503172e-032
+					-0.48481411722005829 1.6950186319296825 -9.2190570332984038e-032
+					-0.48481411722005829 1.8171375504049594 -9.4570589024464905e-032
+					-0.48481411722005818 1.9392564688802361 -2.1598299521558811e-032
+					-0.6464188229600778 1.9392564688802365 -1.0491833486957372e-031
+					-0.8080235287000973 1.9392564688802363 1.1770052747498538e-032
+					-0.96962823444011703 1.9392564688802363 -1.4410909413506914e-031
+					-0.64641882296007769 2.2624658803602755 -2.9647412461938288e-032
+					-0.32320941148003818 2.5856752918403147 1.22551576766398e-032
+					-4.4449885337408631e-032 2.9088847033203535 -6.7705190295648159e-032
+					0.32320941148003929 2.5856752918403147 4.4126066291151527e-032
+					0.64641882296007869 2.2624658803602755 -6.4513208385541227e-032
+					0.96962823444011792 1.9392564688802361 -2.5241063333294296e-032
+					0.80802352870009819 1.9392564688802358 4.2143517707464717e-032
+					0.64641882296007869 1.9392564688802338 1.9046680026227912e-031
+					0.48481411722005902 1.9392564688802361 2.6208063400208833e-032
+					0.48481411722005907 1.8121710341090136 2.4317622914013658e-032
+					0.48481411722005907 1.6850855993377911 2.2427182427818481e-032
+					0.49150170024712397 1.5693873731803301 -2.6943449759996145e-016
+					0.74370058727730903 1.4896906503346816 -2.1118159601623184e-016
+					1.2139275645327567 1.2099901212535749 -7.3457337277748548e-017
+					1.492622467507001 0.73875751789126554 7.599487854586088e-017
+					1.5658618327211518 0.48481411722005902 2.4268612161593135e-033
+					1.6903267114408469 0.4848141172200589 2.7496272825395688e-033
+					1.8147915901605414 0.48481411722005896 1.4700045828039545e-032
+					1.9392564688802361 0.48481411722005902 1.9985610853829224e-033
+					1.9392564688802363 0.64641882296007869 -1.6181909691631032e-032
+					1.9392564688802363 0.80802352870009853 -5.3898756682200276e-032
+					1.9392564688802358 0.96962823444011825 -5.3939449575576065e-032
+					2.2624658803602755 0.64641882296007858 -2.4898358672531751e-032
+					2.5856752918403147 0.32320941148003951 -3.8535232481336544e-032
+					2.9088847033203535 -9.2790747009410617e-032 2.0603684760403111e-047
+					2.5856752918403147 -0.3232094114800389 -5.5700223166567399e-032
+					2.2624658803602755 -0.64641882296007869 -8.5279351367630944e-033
+					1.9392564688802363 -0.96962823444011781 -6.9405249385877985e-033
+					1.9392564688802358 -0.80802352870009808 -6.9812178319635824e-033
+					1.9392564688802358 -0.64641882296007869 -5.6253123954222439e-033
+					1.9392564688802358 -0.48481411722005902 8.4612011572042042e-034
+					1.8159928528839069 -0.48481411722005907 1.36068316833372e-032
+					1.6927292368875773 -0.48481411722005913 2.6367543250953963e-032
+					1.5694656208912483 -0.48481411722005902 1.4521007213772591e-033
+					1.4922039206153772 -0.73946492944098896 4.0415889038142711e-016
+					1.2118575130396674 -1.2131009897153258 4.6424408148549291e-016
+					0.73790215061997255 -1.4931280951456773 4.5020475415479444e-016
+					0.48212613249203529 -1.5723201310425723 4.2665699767916556e-016
+					;
+		
+			
+			select "circleArrow" ; 
+			$controlShape = `ls -sl` ;
+			break ;
+			
+			case "circleArrow1":
+			createNode transform -n "circleArrowOne";
+			//setAttr ".s" -type "double3" 0.47035925959777208 0.47035925959777208 0.47035925959777208 ;
+			createNode nurbsCurve -n "circleArrowOneShape#" -p "circleArrowOne";
+				setAttr -k off ".v";
+				setAttr ".cc" -type "nurbsCurve" 
+					3 41 0 no 3
+					46 1.6323232779999994 1.6323232779999994 1.6323232779999994 2.1323614440000007
+					 2.508560687000001 2.508560687000001 2.508560687000001 2.508560687200001 3.1190822461999996
+					 3.7377151422000008 3.7377151422000008 3.7377151422000008 8.2503519831999999 8.8673647371999973
+					 9.4995526522000002 9.4995526522000002 9.4995526522000002 9.4995526572000024 9.8696137562000015
+					 10.237290478200002 10.858238904700002 11.4771425542 11.4771425542 11.4771425542 11.7313917842
+					 11.7313917842 11.7313917842 12.7313917842 12.7313917842 12.7313917842 13.7313917842
+					 13.7313917842 13.7313917842 14.7313917842 14.7313917842 14.7313917842 15.7313917842
+					 15.7313917842 15.7313917842 15.988118794199998 15.988118794199998 15.988118794199998
+					 16.607948209199996 17.131222498200003 17.131222498200003 17.131222498200003
+					44
+					0.92280404598539989 -6.1473772749569326e-17 -0.38227042422374047
+					0.97294732361444036 -4.2007993060632039e-17 -0.2612238131779257
+					1.0203528391818228 -5.2018275521194907e-18 -0.032347206558936838
+					0.95444013334365885 -8.2442937489379322e-17 0.29225180033556869
+					0.9531298941295282 -2.1163735078422798e-16 0.29378276575636253
+					0.95312989383574542 -2.1163735071899513e-16 0.29378276575636253
+					0.90192832235031906 7.2682129188691334e-17 0.45196881720002124
+					0.76838903537550451 1.183120512518532e-16 0.70136849399473056
+					0.5352588382068123 1.4539944985177351e-16 0.84543689267647371
+					0.31242437702324372 1.5313191882079993e-16 0.95929656238422134
+					-0.045459408033964907 6.5232878156154571e-17 1.0521020688972911
+					-0.42751379262880668 1.4532801012215321e-16 0.95076035886889187
+					-0.69505192745548805 1.1777400516459751e-16 0.73952116516552613
+					-0.90785755831120574 7.1067726701352934e-17 0.44192976646180138
+					-0.95534809885113581 4.5626739087456709e-17 0.2837267362450957
+					-0.95534810016151595 4.5626742596776602e-17 0.28372673643946977
+					-0.95625201448181341 4.5818136911704552e-17 0.28491689799795167
+					-1.0147212097090019 1.0015524741960904e-19 0.00062280851177460704
+					-0.95523736132215109 -4.6351483902269989e-17 -0.28823351198735025
+					-0.73510269415327589 -1.180923557588079e-16 -0.73434918525993065
+					-0.44809349487733713 -1.4541138237174253e-16 -0.9042306717151336
+					-0.29378276575636247 6.5232878156154571e-17 -0.951048937082975
+					-0.29378276575636253 6.5232878156154571e-17 -1.0257429790638002
+					-0.29378276575636253 6.5232878156154571e-17 -1.1004370210446257
+					-0.29378276575636247 6.5232878156154571e-17 -1.1751310630254508
+					-0.39171035434181672 8.6977170874872766e-17 -1.1751310630254508
+					-0.48963794292727081 1.0872146359359092e-16 -1.1751310630254508
+					-0.58756553151272506 1.3046575631230912e-16 -1.175131063025451
+					-0.39171035434181667 8.6977170874872766e-17 -1.3709862401963595
+					-0.19585517717090786 4.3488585437436358e-17 -1.5668414173672678
+					3.9139726893692731e-16 -8.9586975415742784e-64 -1.7626965945381758
+					0.19585517717090892 -4.3488585437436377e-17 -1.5668414173672678
+					0.39171035434181717 -8.6977170874872741e-17 -1.3709862401963593
+					0.58756553151272572 -1.3046575631230914e-16 -1.1751310630254506
+					0.48963794292727147 -1.0872146359359095e-16 -1.1751310630254508
+					0.39171035434181717 -8.6977170874872754e-17 -1.1751310630254508
+					0.29378276575636292 -6.5232878156154571e-17 -1.1751310630254508
+					0.29378276575636292 -6.5232878156154584e-17 -1.0997090919832897
+					0.29378276575636286 -6.5232878156154559e-17 -1.0242871209411288
+					0.29378276575636292 -6.5232878156154571e-17 -0.94886514989896742
+					0.447664824766002 -1.4545216867531504e-16 -0.90448429853632628
+					0.71235883288254787 -1.2027789352863536e-16 -0.74793980143753991
+					0.87732692961249925 -7.9066468695912778e-17 -0.49166939295215861
+					0.92741670800274323 -5.859919290885797e-17 -0.36439504735936151
+					;
+			select "circleArrowOne" ; 
+			$controlShape = `ls -sl` ;
+			break ;
+			
+			case "circleArrow2":
+			createNode transform -n "circleArrowTwo";
+			createNode nurbsCurve -n "circleArrowTwoShape#" -p "circleArrowTwo";
+				setAttr -k off ".v";
+				setAttr ".cc" -type "nurbsCurve" 
+					3 58 0 no 3
+					63 1.6323232779999994 1.6323232779999994 1.6323232779999994 2.1323614440000007
+					 2.508560687000001 2.508560687000001 2.508560687000001 2.508560687200001 3.1190822461999996
+					 3.7377151422000008 3.7377151422000008 3.7377151422000008 3.9942805382 3.9942805382
+					 3.9942805382 4.9942805382 4.9942805382 4.9942805382 5.9942805382 5.9942805382 5.9942805382
+					 6.9942805382 6.9942805382 6.9942805382 7.9942805382 7.9942805382 7.9942805382 8.2503519831999999
+					 8.2503519831999999 8.2503519831999999 8.8673647371999973 9.4995526522000002 9.4995526522000002
+					 9.4995526522000002 9.4995526572000024 9.8696137562000015 10.237290478200002 10.858238904700002
+					 11.4771425542 11.4771425542 11.4771425542 11.7313917842 11.7313917842 11.7313917842
+					 12.7313917842 12.7313917842 12.7313917842 13.7313917842 13.7313917842 13.7313917842
+					 14.7313917842 14.7313917842 14.7313917842 15.7313917842 15.7313917842 15.7313917842
+					 15.988118794199998 15.988118794199998 15.988118794199998 16.607948209199996 17.131222498200003
+					 17.131222498200003 17.131222498200003
+					61
+					0.92280404598539989 -6.1473772749569326e-017 -0.38227042422374047
+					0.97294732361444036 -4.2007993060632039e-017 -0.2612238131779257
+					1.0203528391818228 -5.2018275521194907e-018 -0.032347206558936838
+					0.95444013334365885 -8.2442937489379322e-017 0.29225180033556869
+					0.9531298941295282 -2.1163735078422798e-016 0.29378276575636253
+					0.95312989383574542 -2.1163735071899513e-016 0.29378276575636253
+					0.90192832235031906 7.2682129188691334e-017 0.45196881720002124
+					0.73272628451605559 1.183120512518532e-016 0.73571534656043502
+					0.44821884092203951 1.4539944985177351e-016 0.90415647016109579
+					0.29388737497223599 1.5313191882079993e-016 0.95224029617138894
+					0.29378276575636253 -6.5232878156154571e-017 1.0243820797569376
+					0.29378276575636253 -6.5232878156154571e-017 1.0997565713911939
+					0.29378276575636247 -6.5232878156154571e-017 1.1751310630254508
+					0.39171035434181672 -8.6977170874872766e-017 1.1751310630254508
+					0.48963794292727081 -1.0872146359359092e-016 1.1751310630254508
+					0.58756553151272506 -1.3046575631230912e-016 1.175131063025451
+					0.39171035434181667 -8.6977170874872766e-017 1.3709862401963595
+					0.19585517717090797 -4.3488585437436371e-017 1.5668414173672678
+					-3.913972689369274e-016 5.5247129238367597e-064 1.7626965945381758
+					-0.19585517717090892 4.3488585437436377e-017 1.5668414173672678
+					-0.39171035434181706 8.6977170874872741e-017 1.3709862401963593
+					-0.58756553151272561 1.3046575631230914e-016 1.1751310630254506
+					-0.48963794292727136 1.0872146359359094e-016 1.1751310630254508
+					-0.39171035434181706 8.6977170874872754e-017 1.1751310630254508
+					-0.29378276575636281 6.5232878156154571e-017 1.1751310630254508
+					-0.29378276575636281 6.5232878156154584e-017 1.0999016856821227
+					-0.29378276575636281 6.5232878156154559e-017 1.0246723083387941
+					-0.29378276575636281 6.5232878156154571e-017 0.94944293099546584
+					-0.4489686561137699 1.4532801012215344e-016 0.90371222712009058
+					-0.73796165442541528 1.1777400516459791e-016 0.73236954400387355
+					-0.90785755831120574 7.1067726701352934e-017 0.44192976646180138
+					-0.95534809885113581 4.5626739087456709e-017 0.2837267362450957
+					-0.95534810016151595 4.5626742596776602e-017 0.28372673643946977
+					-0.95625201448181341 4.5818136911704552e-017 0.28491689799795167
+					-1.0147212097090019 1.0015524741960904e-019 0.00062280851177460704
+					-0.95523736132215109 -4.6351483902269989e-017 -0.28823351198735025
+					-0.73510269415327589 -1.180923557588079e-016 -0.73434918525993065
+					-0.44809349487733713 -1.4541138237174253e-016 -0.9042306717151336
+					-0.29378276575636247 6.5232878156154571e-017 -0.951048937082975
+					-0.29378276575636253 6.5232878156154571e-017 -1.0257429790638002
+					-0.29378276575636253 6.5232878156154571e-017 -1.1004370210446257
+					-0.29378276575636247 6.5232878156154571e-017 -1.1751310630254508
+					-0.39171035434181672 8.6977170874872766e-017 -1.1751310630254508
+					-0.48963794292727081 1.0872146359359092e-016 -1.1751310630254508
+					-0.58756553151272506 1.3046575631230912e-016 -1.175131063025451
+					-0.39171035434181667 8.6977170874872766e-017 -1.3709862401963595
+					-0.19585517717090786 4.3488585437436358e-017 -1.5668414173672678
+					3.9139726893692731e-016 -8.9586975415742784e-064 -1.7626965945381758
+					0.19585517717090892 -4.3488585437436377e-017 -1.5668414173672678
+					0.39171035434181717 -8.6977170874872741e-017 -1.3709862401963593
+					0.58756553151272572 -1.3046575631230914e-016 -1.1751310630254506
+					0.48963794292727147 -1.0872146359359095e-016 -1.1751310630254508
+					0.39171035434181717 -8.6977170874872754e-017 -1.1751310630254508
+					0.29378276575636292 -6.5232878156154571e-017 -1.1751310630254508
+					0.29378276575636292 -6.5232878156154584e-017 -1.0997090919832897
+					0.29378276575636286 -6.5232878156154559e-017 -1.0242871209411288
+					0.29378276575636292 -6.5232878156154571e-017 -0.94886514989896742
+					0.447664824766002 -1.4545216867531504e-016 -0.90448429853632628
+					0.71235883288254787 -1.2027789352863536e-016 -0.74793980143753991
+					0.87732692961249925 -7.9066468695912778e-017 -0.49166939295215861
+					0.92741670800274323 -5.859919290885797e-017 -0.36439504735936151
+					;
+
+	
+			select "circleArrowTwo" ; 
+			$controlShape = `ls -sl` ;
+			break ;
+			
+			case "circleArrow3":
+			createNode transform -n "circle_threeArrow";
+			//setAttr ".t" -type "double3" 8.2068715989685629e-033 0 0 ;
+			//setAttr ".r" -type "double3" 90.000000000000014 0 0 ;
+			createNode nurbsCurve -n "circle_threeArrowShape#" -p "circle_threeArrow";
+				setAttr -k off ".v";
+				setAttr ".cc" -type "nurbsCurve" 
+					3 70 0 no 3
+					75 15.745750770000001 15.745750770000001 15.745750770000001 15.994336930000003
+					 20.253014204999999 20.885202120000002 21.502214874 21.502214874 21.502214874 21.758286319
+					 21.758286319 21.758286319 22.758286319 22.758286319 22.758286319 23.758286319 23.758286319
+					 23.758286319 24.758286319 24.758286319 24.758286319 25.758286319 25.758286319 25.758286319
+					 26.014851714999999 26.014851714999999 26.014851714999999 26.633484611 27.244006168999999
+					 27.244006168999999 27.244006168999999 27.495894292999999 27.495894292999999 27.495894292999999
+					 28.495894292999999 28.495894292999999 28.495894292999999 29.495894292999999 29.495894292999999
+					 29.495894292999999 30.495894292999999 30.495894292999999 30.495894292999999 31.495894292999999
+					 31.495894292999999 31.495894292999999 31.758026582999999 31.758026582999999 31.758026582999999
+					 32.371381249000002 32.991210664 32.991210664 32.991210664 33.247937673999999 33.247937673999999
+					 33.247937673999999 34.247937673999999 34.247937673999999 34.247937673999999 35.247937673999999
+					 35.247937673999999 35.247937673999999 36.247937673999999 36.247937673999999 36.247937673999999
+					 37.247937673999999 37.247937673999999 37.247937673999999 37.502186903999998 37.502186903999998
+					 37.502186903999998 38.121090553499997 38.742038981499995 38.742038981499995 38.742038981499995
+					
+					73
+					0.48481411722005902 -1.5777022297396628 2.3880375840419999e-033
+					-9.2006324395624254e-005 -1.6154287494983863 -1.8383419221292566e-017
+					-0.46821918505073351 -1.5765602995462438 2.7477132120391271e-016
+					-0.72929325533727285 -1.4981891792087632 2.1538552418393932e-016
+					-1.2085906164065217 -1.2178189796511685 7.6053939763851028e-017
+					-1.4913483589964849 -0.74090916161428844 -7.5312225390052204e-017
+					-1.5668153142214165 -0.48481411722005902 -2.4738714836224478e-033
+					-1.6909623657743564 -0.4848141172200589 -2.7809674608482989e-033
+					-1.8151094173272964 -0.48481411722005896 -1.4715715917193923e-032
+					-1.9392564688802361 -0.48481411722005902 -1.9985610853829114e-033
+					-1.9392564688802363 -0.64641882296007869 1.6181909691631043e-032
+					-1.9392564688802363 -0.80802352870009853 5.3898756682200298e-032
+					-1.9392564688802358 -0.96962823444011825 5.3939449575576087e-032
+					-2.2624658803602755 -0.64641882296007858 2.4898358672531762e-032
+					-2.5856752918403147 -0.32320941148003951 3.8535232481336555e-032
+					-2.9088847033203535 -5.5987979570740818e-032 1.2431828804335869e-047
+					-2.5856752918403147 0.32320941148003912 3.3256933833232171e-032
+					-2.2624658803602755 0.64641882296007869 8.5279351367631054e-033
+					-1.9392564688802363 0.96962823444011781 6.9405249385878095e-033
+					-1.9392564688802358 0.80802352870009808 6.9812178319635934e-033
+					-1.9392564688802358 0.64641882296007869 5.6253123954222548e-033
+					-1.9392564688802358 0.48481411722005902 -8.4612011572040913e-034
+					-1.8148699429092809 0.48481411722005907 -1.3551467947145627e-032
+					-1.6904834169383258 0.48481411722005913 -2.6256815778570828e-032
+					-1.5714316576097551 0.48498674826094496 -3.6039417501359204e-016
+					-1.492081469726114 0.73967178137068945 -4.0418512913158553e-016
+					-1.2141120169171189 1.2091793263536312 -4.6373584916860803e-016
+					-0.7458601683379269 1.4884044755663774 -4.5043564676536961e-016
+					-0.48481411722005835 1.5728997134544056 -8.9810551641503172e-032
+					-0.48481411722005829 1.6950186319296825 -9.2190570332984038e-032
+					-0.48481411722005829 1.8171375504049594 -9.4570589024464905e-032
+					-0.48481411722005818 1.9392564688802361 -2.1598299521558811e-032
+					-0.6464188229600778 1.9392564688802365 -1.0491833486957372e-031
+					-0.8080235287000973 1.9392564688802363 1.1770052747498538e-032
+					-0.96962823444011703 1.9392564688802363 -1.4410909413506914e-031
+					-0.64641882296007769 2.2624658803602755 -2.9647412461938288e-032
+					-0.32320941148003818 2.5856752918403147 1.22551576766398e-032
+					-4.4449885337408631e-032 2.9088847033203535 -6.7705190295648159e-032
+					0.32320941148003929 2.5856752918403147 4.4126066291151527e-032
+					0.64641882296007869 2.2624658803602755 -6.4513208385541227e-032
+					0.96962823444011792 1.9392564688802361 -2.5241063333294296e-032
+					0.80802352870009819 1.9392564688802358 4.2143517707464717e-032
+					0.64641882296007869 1.9392564688802338 1.9046680026227912e-031
+					0.48481411722005902 1.9392564688802361 2.6208063400208833e-032
+					0.48481411722005907 1.8121710341090136 2.4317622914013658e-032
+					0.48481411722005907 1.6850855993377911 2.2427182427818481e-032
+					0.49150170024712397 1.5693873731803301 -2.6943449759996145e-016
+					0.74370058727730903 1.4896906503346816 -2.1118159601623184e-016
+					1.2139275645327567 1.2099901212535749 -7.3457337277748548e-017
+					1.492622467507001 0.73875751789126554 7.599487854586088e-017
+					1.5658618327211518 0.48481411722005902 2.4268612161593135e-033
+					1.6903267114408469 0.4848141172200589 2.7496272825395688e-033
+					1.8147915901605414 0.48481411722005896 1.4700045828039545e-032
+					1.9392564688802361 0.48481411722005902 1.9985610853829224e-033
+					1.9392564688802363 0.64641882296007869 -1.6181909691631032e-032
+					1.9392564688802363 0.80802352870009853 -5.3898756682200276e-032
+					1.9392564688802358 0.96962823444011825 -5.3939449575576065e-032
+					2.2624658803602755 0.64641882296007858 -2.4898358672531751e-032
+					2.5856752918403147 0.32320941148003951 -3.8535232481336544e-032
+					2.9088847033203535 -9.2790747009410617e-032 2.0603684760403111e-047
+					2.5856752918403147 -0.3232094114800389 -5.5700223166567399e-032
+					2.2624658803602755 -0.64641882296007869 -8.5279351367630944e-033
+					1.9392564688802363 -0.96962823444011781 -6.9405249385877985e-033
+					1.9392564688802358 -0.80802352870009808 -6.9812178319635824e-033
+					1.9392564688802358 -0.64641882296007869 -5.6253123954222439e-033
+					1.9392564688802358 -0.48481411722005902 8.4612011572042042e-034
+					1.8159928528839069 -0.48481411722005907 1.36068316833372e-032
+					1.6927292368875773 -0.48481411722005913 2.6367543250953963e-032
+					1.5694656208912483 -0.48481411722005902 1.4521007213772591e-033
+					1.4922039206153772 -0.73946492944098896 4.0415889038142711e-016
+					1.2118575130396674 -1.2131009897153258 4.6424408148549291e-016
+					0.73790215061997255 -1.4931280951456773 4.5020475415479444e-016
+					0.48212613249203529 -1.5723201310425723 4.2665699767916556e-016
+					;
+			
+				
+			select "circle_threeArrow" ; 
+			$controlShape = `ls -sl` ;
+			break ;
+			
+			case "bulb":
+			$controlShapeSingle = `curve -d 3 -p -0.139471 -0.798108 0 -p -0.139471 -0.798108 0 -p -0.139471 -0.798108 0 -p -0.299681 -0.672294 0 -p -0.299681 -0.672294 0 -p -0.299681 -0.672294 0 -p -0.121956 -0.578864 0 -p -0.121956 -0.578864 0 -p -0.121956 -0.578864 0 -p -0.285304 -0.51952 0 -p -0.285304 -0.51952 0 -p -0.0744873 -0.442806 0 -p -0.0744873 -0.442806 0 -p -0.287769 -0.373086 0 -p -0.287769 -0.373086 0 -p -0.100386 -0.296549 0 -p -0.100386 -0.296549 0 -p -0.264344 -0.205725 0 -p -0.264344 -0.205725 0 -p -0.262544 -0.0993145 0 -p -0.262544 -0.0993145 0 -p -0.167051 -0.0613459 0 -p -0.167051 -0.0613459 0 -p -0.167051 -0.0613459 0 -p -0.166024 0.0163458 0 -p -0.157394 0.232092 0 -p -0.367902 0.680843 0 -p -0.96336 1.224522 0 -p -1.006509 1.992577 0 -p -0.316123 2.613925 0 -p 0.561786 2.548479 0 -p 1.094888 2.001207 0 -p 1.051638 1.166965 0 -p 0.436419 0.66543 0 -p 0.13283 0.232092 0 -p 0.15009 0.0163458 0 -p 0.15073 -0.046628 0 -p 0.15073 -0.046628 0 -p 0.270326 -0.0955798 0 -p 0.270326 -0.0955798 0 -p 0.267815 -0.208156 0 -p 0.267815 -0.208156 0 -p 0.0884224 -0.291145 0 -p 0.0884224 -0.291145 0 -p 0.292477 -0.366091 0 -p 0.292477 -0.366091 0 -p 0.0946189 -0.439723 0 -p 0.0946189 -0.439723 0 -p 0.306664 -0.508968 0 -p 0.306664 -0.508968 0 -p 0.112488 -0.57513 0 -p 0.112488 -0.57513 0 -p 0.323789 -0.674644 0 -p 0.323789 -0.674644 0 -p 0.152097 -0.794645 0 -p 0.152097 -0.794645 0 -p 0.152097 -0.794645 0 -p 0.106716 -0.907397 0 -p 0.0103741 -1.003739 0 -p -0.0919896 -0.907397 0 -p -0.139471 -0.798108 0 -p -0.139471 -0.798108 0 -k 0 -k 0 -k 0 -k 1 -k 2 -k 3 -k 4 -k 5 -k 6 -k 7 -k 8 -k 9 -k 10 -k 11 -k 12 -k 13 -k 14 -k 15 -k 16 -k 17 -k 18 -k 19 -k 20 -k 21 -k 22 -k 23 -k 24 -k 25 -k 26 -k 27 -k 28 -k 29 -k 30 -k 31 -k 32 -k 33 -k 34 -k 35 -k 36 -k 37 -k 38 -k 39 -k 40 -k 41 -k 42 -k 43 -k 44 -k 45 -k 46 -k 47 -k 48 -k 49 -k 50 -k 51 -k 52 -k 53 -k 54 -k 55 -k 56 -k 57 -k 58 -k 59 -k 59 -k 59 -n "bulb#"`;
+			//since the curve command doesn't return an array I'm ghetto hacking it here
+			//select the new node
+			select $controlShapeSingle ; 
+			//convert the selection array to the variable array we need to continue
+			$controlShape = `ls -sl` ;
+			break ;
+
+		}
+		
+		//create nurbs circle with no construction history-->so it generates a shape
+		//string $controlShape[] = `circle -c 0 0 0 -nr 0 1 0 -sw 360 -r 1 -d 3 -ut 0 -tol 0.01 -s 8 -ch 0 -n ($transform + "_animCtrl_Med") `;
+		
+		//select the newly created circle
+		select $controlShape[0] ;
+		
+		//pickwalk down to select the shape node 
+		pickWalk -d down ;
+		
+		//select the target transform to replace 
+		select -add $transform ;
+		
+		//parent the shape node to the selected transform 
+		parent -add -s -r ;
+		
+		//cleanUp
+		delete $controlShape[0] ;
+	
+	}
+	//restore the user selection
+	select -replace $userSelection;	
+}
+
+global proc mh_updateOrder(string $item, string $itemRot)
+{
+	global string $gSuffix[];
+	
+	//curveShape
+	string $controlShape[] ; 
+	
+	print $itemRot ; 
+	int $rotOrderInt ;
+	$rotOrderInt = $itemRot ;
+	print $rotOrderInt ;
+	
+	//store the user selection
+	string $userSelection[] = `ls -sl`;
+	
+	//filter out the transforms of the current selection
+	string $transforms[] = `ls -sl -type "transform"`;
+
+	for ($transform in $transforms){
+
+		setAttr ($transform + ".rotateOrder") ($rotOrderInt - 1);
+	}
+}
+
+global proc js_quickAddAttr ( string $attr )
+{
+
+    if ($attr == "")
+    {
+        js_createAddAttrWin;
+    }
+    else
+    {
+        js_quickAddAttrGo $attr;
+    }
+}
+
+global proc js_createAddAttrWin ()
+{
+    $win = "js_quickAddAttr";
+    if (`window -exists $win`)
+        deleteUI $win;
+        
+    if (`windowPref -exists $win`){
+			windowPref -remove $win ;
+	}   
+
+    window -t "Quick-Add Attribute" -w 200 -h 100 $win;
+    columnLayout -adj true -co "both" 10 ;
+    text -align "left" -l "Please Enter New Attribute:";
+    $t = `textField`;
+    textField -e -cc ("js_quickAddAttrPrep " + $t) $t;
+
+    showWindow $win;
+}
+
+global proc js_quickAddAttrPrep (string $t)
+{
+    string $attr = `textField -q -tx $t`;
+    $cmd = ("js_quickAddAttrGo \"" + $attr + "\"");
+    evalEcho $cmd;
+    textField -e -tx "" -ip 1 $t;
+    evalDeferred ("setFocus \""+$t+"\"");
+}
+global proc js_quickAddAttrGo (string $attr)
+{
+    // grab the selected objects
+    string $objs[0];
+    $objs = `ls -sl`;
+    string $attrs[0];
+    // now tokenize by spaces
+    tokenize ($attr, $attrs);
+
+   
+    for ($ob in $objs)
+    {
+        // split the attr into individual attributes
+        for ($at in $attrs)
+        {
+            if (!`attributeQuery -exists -node $ob $at`)
+            {
+                addAttr -ln $at -at double $ob;
+            }
+            if (!`getAttr -k ($ob + "." + $at)`)
+            {
+                setAttr -k 1 ($ob + "." + $at);
+            }
+        }
+    }
+}

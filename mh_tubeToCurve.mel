@@ -1,0 +1,67 @@
+/**********************************************************************************************
+Procedure: mh_tubeToCurve()
+Version: 1.0
+Date: 12-29-10
+Description: This procedure creates a curve inside a tube based on edge ring -> edge loop selection
+
+**********************************************************************************************/
+
+global proc mh_tubeToCurve() 
+{	
+	//intitialize selection order
+	//selectPref -tso 1 ;
+	
+	//initialize the curve command
+	string $curvecmd = "curve "; 
+	
+	//grab the selected edge-slight error checking
+	string $selectedEdge[] = `ls -os` ;
+	
+	/*
+	if (size($selectedObj) == 0 ){
+		error "nothing selected" ;
+	}
+	
+	if (size($selectedObj)> 1 ){
+		error "only select one obj please" ;
+	}
+	*/
+	
+	//isolate the initial selection into a string var versus an array
+	string $edgeString = $selectedEdge[0] ;
+	
+	//grab the edge number
+	int $number = `match "[0-9]+" $edgeString`;
+	
+	//grab the object name
+	string $objName = `match "^[^\.]*" $edgeString`;
+
+	//buffer the command in a string array, 2017 edit--added -er 0 to select all edge rings
+	//below logic doesn't make sense
+	//$edgeRings = `polySelect -edgeRing 0 $selectedEdge` ;
+	
+	
+	
+	//for ($edge in $selectedEdge)
+	for ($i = 0; $i < size ($selectedEdge); $i++)
+	{
+	    // bad logic below, grabs edge with full name
+		//select -r ($objName + ".e[" + $edge + "]");
+	    
+	    //select -r $selectedEdge[$i] ;
+	
+	    //===========================
+	    int $number = `match "[0-9]+" $selectedEdge[$i]`;
+	    polySelect -el $number $objName ;
+	    polySelect -add -elb $number $objName ;
+	    float $bb[] = `exactWorldBoundingBox -ii 1`;
+	    $xcenter = ($bb[0]+$bb[3])/2;
+	    $ycenter = ($bb[1]+$bb[4])/2;
+	    $zcenter = ($bb[2]+$bb[5])/2;
+	    $curvecmd += ("-p " + $xcenter + " " + $ycenter + " " + $zcenter + " ");
+	    print $curvecmd ;  
+	    //===========================
+	}
+		
+	string $executeCommand = `eval($curvecmd)`; 	
+}

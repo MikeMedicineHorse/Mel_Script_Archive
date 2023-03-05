@@ -1,0 +1,52 @@
+/**********************************************************************************************
+Procedure: mh_fixGroupPivot()
+Version: 1.0
+Date: 04-10-09
+Description: This procedure fixes the RP of a grp so the channel box attrs are based on world space
+**********************************************************************************************/
+
+global proc mh_fixGroupPivot()
+{
+	//store the selected group for future use
+	
+	string $selectedGrp[] = `ls -sl` ;
+	
+	
+	//if more than one obj selected error out.
+	if (size($selectedGrp) > 1)
+               error ("Please select only one goup node.\n");
+    
+    //store the children of the group 
+    
+    select `listRelatives -f -c ` ;               
+    string $children[] = `ls -sl` ;
+
+    //select the children
+	select $children ; 
+
+	//unparent them
+	parent -w ;
+	
+	//reselect the group and grab the attrs
+	
+	select -r $selectedGrp ;
+	
+	//grab the rotate and scale pivots 
+	
+	float $rotatePivot[] = `getAttr ($selectedGrp[0] + ".rotatePivot")` ;
+	
+	
+	setAttr ($selectedGrp[0] + ".rotatePivot") 0 0 0 ;
+	setAttr ($selectedGrp[0] + ".scalePivot") 0 0 0 ;
+	
+	setAttr ($selectedGrp[0] + ".translate") $rotatePivot[0] $rotatePivot[1] $rotatePivot[2] ; 
+	
+	select -r $children ;
+	
+	select -add $selectedGrp ; 
+	
+	parent ; 
+	
+	select -r $selectedGrp ; 
+	
+}

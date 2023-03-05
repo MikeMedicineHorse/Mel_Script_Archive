@@ -1,0 +1,30 @@
+/**********************************************************************************************
+Procedure: mh_overrideMRAA()
+Version: 1.0
+Date: 01-05-10
+Description: This procedure takes the selected objects and applies an MR AntiAliasing override.
+The procedure takes 3 arguments.  The first is 0-1 either on or off, the second is min AA level 
+and the third is max AA level.  
+
+Example syntax: 
+
+mh_overrideMRAA(1, 1, 3)
+
+turns on the override and sets the min max to 1/3 respectively.
+
+**********************************************************************************************/
+
+
+global proc mh_overrideMRAA(int $toggle, int $min, int $max)
+{
+	string $userSelection[] = `ls -sl`;
+	string $shapes[];
+	$shapes = $userSelection;
+	$shapes = `listRelatives -shapes $userSelection`;
+
+	for ($i = 0; $i < size ($shapes); $i++){
+	  	setAttr ($shapes[$i] + ".miOverrideSamples") $toggle;
+	  	setAttr ($shapes[$i] + ".miMinSamples") $min;
+		setAttr ($shapes[$i] + ".miMaxSamples") $max;
+	}
+}

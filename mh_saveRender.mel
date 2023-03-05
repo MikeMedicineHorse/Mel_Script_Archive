@@ -1,0 +1,235 @@
+/**********************************************************************************************
+Procedure: mh_saveRender()
+Version: 2.0
+Date: 05-04-09
+Description: This procedure saves all the renderView images
+**********************************************************************************************/
+
+
+
+global proc pathButtonCommand(string $mySelectedFolder)
+{	
+	textField -e -tx $mySelectedFolder ScenesDirPathTF;
+}
+
+global proc mh_folderPath(string $filename, string $fileType )
+{
+	global string $mySelectedFolder ; 
+	$mySelectedFolder = $filename ;
+	textField -e -tx $mySelectedFolder ScenesDirPathTF;
+}
+
+
+global proc mh_saveAllRVImages()
+{	
+	// first find the render view controls
+  	string $renderViewPanels[] = `getPanel -scriptType "renderWindowPanel"`;
+  	if (size($renderViewPanels) < 1) { 
+	  	error "Render View window not found";
+	   }
+ 	string $renderViewForm     = `renderWindowEditor -query -parent $renderViewPanels[0]`;
+ 	if ($renderViewForm == ""){ 
+	 	error "Render View window not found"; 
+	 	}
+	//store the user image format globablly
+	int $userImageFormat = `getAttr "defaultRenderGlobals.imageFormat"` ;
+	
+ 	string $currentFileType = `optionMenu -q -value medOptionMenu` ; 
+
+	if ($currentFileType == "IFF"){
+		setAttr "defaultRenderGlobals.imageFormat" 7;
+	}
+	if ($currentFileType == "TIFF"){
+		setAttr "defaultRenderGlobals.imageFormat" 3;
+	}
+	if ($currentFileType == "JPEG"){
+		setAttr "defaultRenderGlobals.imageFormat" 8;
+	}
+	if ($currentFileType == "PNG"){
+		setAttr "defaultRenderGlobals.imageFormat" 32;
+	}
+	if ($currentFileType == "RLA"){
+		setAttr "defaultRenderGlobals.imageFormat" 2;
+	}
+	if ($currentFileType == "TARGA"){
+		setAttr "defaultRenderGlobals.imageFormat" 19;
+	}
+	if ($currentFileType == "BMP"){
+		setAttr "defaultRenderGlobals.imageFormat" 20;
+	}
+	if ($currentFileType == "HDR"){
+		setAttr "defaultRenderGlobals.imageFormat" 51;
+	}
+	if ($currentFileType == "PSD"){
+		setAttr "defaultRenderGlobals.imageFormat" 31;
+	}
+	if ($currentFileType == "SGI(RGB)"){
+		setAttr "defaultRenderGlobals.imageFormat" 5;
+	}
+	if ($currentFileType == "SOFTIMAGE (pic)"){
+		setAttr "defaultRenderGlobals.imageFormat" 1;
+	}
+	if ($currentFileType == "ELFdefaultMenuItem"){
+		setAttr "defaultRenderGlobals.imageFormat" 0;
+	}
+	if ($currentFileType == "ALIAS PIX (als)"){
+		setAttr "defaultRenderGlobals.imageFormat" 6;
+	}
+	if ($currentFileType == "EPS"){
+		setAttr "defaultRenderGlobals.imageFormat" 9;
+	}
+	if ($currentFileType == "Quantel PAL (yuv)"){
+		setAttr "defaultRenderGlobals.imageFormat" 12; 
+	}
+ 	 
+	$totalImages = `renderWindowEditor -q -nim renderView` ;
+	$selectedRender = `renderWindowEditor -q -di renderView` ;
+	
+	global string $mySelectedFolder ; 
+
+	for($i=0; $i<$totalImages; $i++) {
+		$currentRender = `renderWindowEditor -e -di $i renderView` ;
+		
+		//query framestamp info for current frame
+		string $frameStamp = `renderWindowEditor -q -pca renderView` ;
+		
+		//intialize buffer variable
+		string $buffer[];
+		
+		//tokenize list for sorting layer name--> array 10 is the layer name
+		$numTokens = tokenize($frameStamp, $buffer);
+		
+		//query the prefix text from the UI and store it for use in this variable
+		string $prefixQuery = `textField -q -tx medImagePrefixField` ;
+		
+		//if there are no layers swap out buffer 10 for the MasterLayer name
+		if (size ($buffer) == 9){
+			$buffer[10] = "MasterLayer" ;
+		}
+
+		renderWindowSaveImageCallback "renderView" ($mySelectedFolder + "/" + $prefixQuery + "_" + $buffer[10] + "_00" + $i) "image";
+		}
+	
+	//return renderview to user selected render	
+	renderWindowEditor -e -di $selectedRender renderView ;
+	
+	//return image format back to what the user had orginally
+	setAttr "defaultRenderGlobals.imageFormat" $userImageFormat ;
+				
+}
+
+global proc mh_saveRender()
+{	
+	if (`window -exists medRenderSaveWindow`){
+		deleteUI -window medRenderSaveWindow;		
+	}
+	
+	if (`windowPref -exists medRenderSaveWindow`){
+			windowPref -remove medRenderSaveWindow;
+	}
+	
+			
+	window
+		-title "Save Render View Images"
+		//-iconName "EFF Render Icon"
+		//40 pixels per button added
+		-widthHeight 750 180
+		-minimizeButton on
+		-maximizeButton on
+		-sizeable off
+		-titleBar on
+		medRenderSaveWindow;
+	columnLayout
+		-columnAttach "both" 5
+		-rowSpacing 10
+		-columnWidth 750;
+	text
+		-label "Save Render View Images";
+		
+
+		
+	separator 
+		-height 10
+		-width 10
+		-style "in";
+		
+	rowColumnLayout
+		-nc 3 
+		-columnWidth 1 120 
+		-columnWidth 2 550 
+		-columnWidth 3 23
+		firstRowLayout ;
+	
+	text -l "Scenes Directory  " -align "right";
+	
+	string $mySelectedFolder;
+	textField 
+		-w 550 
+		-tx $mySelectedFolder  
+		ScenesDirPathTF;
+		
+	string $pathButtonCommand = "fileBrowserDialog -m 4 -fc mh_folderPath -an \"Select_Directory\"" ;	
+	
+	button 
+		-w 60 
+		-annotation "Load Scene Directory" 
+		-l "..." 
+		-al "center" 
+		-c $pathButtonCommand
+		loadBtn;
+		
+	setParent medRenderSaveWindow ;
+	
+	rowColumnLayout
+		-nc 4 
+		-columnWidth 1 120 
+		-columnWidth 2 120 
+		-columnWidth 3 200
+		-columnWidth 4 250
+		secondRowLayout ;
+		
+	text -l "Prefix Text:  " -align "right";
+		
+	textField 
+		-w 115 
+		-tx myPrefix 
+		medImagePrefixField;
+	
+	optionMenu -label "Image Format"  medOptionMenu;
+            menuItem -label "IFF";
+            menuItem -label "TIFF";
+            menuItem -label "JPEG";
+            menuItem -label "PNG";
+            menuItem -label "RLA";
+            menuItem -label "TARGA";
+            menuItem -label "BMP";
+            menuItem -label "HDR";
+            menuItem -label "PSD";
+            menuItem -label "SGI(RGB)";
+            menuItem -label "SOFTIMAGE (pic)";
+            menuItem -label "ELFdefaultMenuItem";
+            menuItem -label "ALIAS PIX (als)";
+            menuItem -label "EPS";
+            menuItem -label "Quantel PAL (yuv)";
+            	
+	button
+		-width 150
+		-label "Save All Images"
+		-command "mh_saveAllRVImages"
+		-align "center"
+		saveImageButton ;
+		
+	setParent medRenderSaveWindow ;
+		
+	showWindow medRenderSaveWindow;	
+				
+}
+
+
+
+
+
+
+
+	
+	

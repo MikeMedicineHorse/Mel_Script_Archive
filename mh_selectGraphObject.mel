@@ -1,0 +1,21 @@
+/**********************************************************************************************
+Procedure: mh_selectGraphObject()
+Version: 1.0
+Date: 01-27-10
+Description: This procedure selects the object from the graph editor selection
+**********************************************************************************************/
+
+
+global proc mh_selectGraphObject()
+{
+	//grab the current list of objects to revert the list after selection
+	string $graphEditorObjects[] = `selectionConnection -q -object graphEditorList`;
+	
+	//grab the currect selection from the graph editor
+	string $graphEditorSelection[] = `selectionConnection -q -object graphEditor1FromOutliner`;
+	
+	//select the object in the outliner
+	select $graphEditorSelection ;			
+}
+	
+	

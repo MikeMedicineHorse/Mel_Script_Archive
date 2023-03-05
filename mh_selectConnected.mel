@@ -1,0 +1,44 @@
+/**********************************************************************************************
+Procedure: mh_selectConnected()
+Version: 1.0
+Date: 04-16-09
+Description: This procedure selects connected components
+**********************************************************************************************/
+
+global proc mh_selectConnected()
+{
+	string $selectedComponent[] = `ls -sl` ;
+	
+	//if edges are selected, then run edge mode
+	if (`gmatch $selectedComponent[0] "*.e*"` == 1 ) {
+		polySelectConstraint -t 0 ;
+		polySelectConstraint -sh 1 -bo 0 -m 2 ;
+		print "edges selected.\n" ;
+	}else{
+		print "no edges selected.\n" ;
+	}
+	
+	//if verts are selected, then run vert mode
+	if (`gmatch $selectedComponent[0] "*.vtx*"` == 1 ) {
+		polySelectConstraint -t 0;
+		polySelectConstraint -sh 1 -bo 0 -m 2;
+		print "verts selected.\n" ;
+	}else{
+		print "no verts selected.\n" ;
+	}
+	
+	//if polys are selected, then run poly mode
+	if (`gmatch $selectedComponent[0] "*.f*"` == 1 ) {
+		polySelectConstraint -t 0;
+		polySelectConstraint -sh 1 -bo 0 -m 2;
+		print "polys selected.\n" ;
+	}else{
+		print "no faces selected.\n" ;
+	}
+	
+	//turn off constraints
+	polySelectConstraint -sh 0 -bo 0 -m 0;
+	print "selected all connected. see script editor for details.\n" ;
+	
+}
+		

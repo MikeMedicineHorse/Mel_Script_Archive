@@ -1,0 +1,36 @@
+/**********************************************************************************************
+Procedure: mh_selectNodeType()
+Version: 3.0
+Date: 07-08-10
+Description: This procedure will select objects connected to a certain node based on the argument string
+**********************************************************************************************/
+
+
+global proc mh_selectNodeType(string $userNode)
+{
+	//grab the nodes via a user input string
+	//string $node[] = `select ("*" + $userNode + "*")`;
+	string $node[] = `lsType($userNode)` ;
+
+	string $items[] = { "<done>" };
+	
+	string $diff[] = stringArrayRemove($items, $node);
+
+	select $diff ;
+	
+	//hold all shapes
+	string $shapeNodes[];
+	
+	string $selectedNode[] = `ls -sl -type $userNode` ; 
+	
+	string $tempX[] ;
+	
+	for ($i = 0; $i < size ($selectedNode); $i++){
+			$tempX = `listConnections $selectedNode[$i]` ;
+		for ($j = 0; $j < size ($tempX); $j++){
+			$shapeNodes[size($shapeNodes)] = $tempX[$j] ;
+		}
+	}
+	
+	select $shapeNodes ;	
+}

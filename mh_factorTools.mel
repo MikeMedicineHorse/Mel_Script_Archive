@@ -1,0 +1,93 @@
+/**********************************************************************************************
+Procedure: mh_factorTools()
+Version: 1.0
+Date: 08-11-10
+Description: This procedure launches a window for factor tools
+
+**********************************************************************************************/
+
+global proc mh_factorTools()
+{
+
+	//ititialize the window name variable
+	$win = "factorWin";
+	$scrollList = "sssTsl" ;
+	$mainForm = "medFactorLayout" ;
+	
+	
+	//check to see if the window or prefs exist then delete if so
+	if (`window -exists $win`)
+        deleteUI $win;
+        
+	if (`windowPref -exists $win`){
+			windowPref -remove $win ;
+	}   
+
+	window
+		-t "Factor 5 Tools" 
+		-wh 345 210 
+		//maximize button
+		-mxb 0 
+		//window will always shrink to fit controls
+		-rtf 0
+		//sizeable
+		-s 0
+		$win ;
+
+	formLayout $mainForm ;
+
+	//content
+	text -label "++These scripts are intended for the masterLayer ONLY++" -al "center" warningText ;
+	separator -style "in" warningSeparator ;
+
+	button -l "Object Buffer | Lum Pass" -c mh_factorOB obButton ; 
+	button -l "AO pass" -c mh_factorAO aoButton ;
+	button -l "Rear DOF pass" -c mh_factorRearDOFlayer rDofButton ;
+	button -l "Front DOF pass" -c mh_factorFrontDOFlayer fDofButton ;
+	separator -style "in" footSeparator ;
+	text -l "++------\\Med/-------++" -al "center" footText ;
+
+	//--->end content
+
+	formLayout -e
+		-af warningText left 5
+		-af warningText top 5
+		-af warningText right 5
+		
+		-af warningSeparator left 5 
+		-ac warningSeparator top 0 warningText
+		-af warningSeparator right 5
+		
+		-af obButton left 5 
+		-ac obButton top 5 warningSeparator
+		-af obButton right 5 
+
+		-af aoButton left 5 
+		-ac aoButton top 5 obButton
+		-af aoButton right 5 
+
+		-af rDofButton left 5 
+		-ac rDofButton top 5 aoButton
+		-af rDofButton right 5
+
+		-af fDofButton left 5 
+		-ac fDofButton top 5 rDofButton 
+		-af fDofButton right 5
+
+		-af footSeparator  left 5 
+		-ac footSeparator  top 5 fDofButton 
+		-af footSeparator  right 5
+
+		-af footText left 5 
+		-ac footText top 5 footSeparator 
+		-af footText right 5
+
+		
+
+		
+		$mainForm ;
+
+		
+	showWindow $win ;	
+}
+

@@ -1,0 +1,122 @@
+/**********************************************************************************************
+Procedure: mh_bulletTime()
+Version: 1.0
+Date: 09-18-15
+Description: This procedure hooks up a bullet time curve to the selected objects 
+**********************************************************************************************/
+
+
+global proc mh_bulletTime(string $bulletName){
+	//declare some variables
+	string $currentDeformers[];
+	
+	//start by storing the original selection
+	$userSelection = `ls -sl` ;
+	string $childNodes[] = `listRelatives -c -ad -pa $userSelection`;
+
+	//make bullet control
+	//grab playback range for settings keys later
+	float $playbackMin = `playbackOptions -q -min`;
+	float $playbackMax = `playbackOptions -q -max`;
+	
+	//bullet time node creation
+	string $bulletAttr = "bulletTime" ; 
+	//add bulletattr via variable
+	$bulletCtrl = `group -em -n ($bulletName)` ;
+	addAttr -ln $bulletAttr  -at time -keyable true -min 1 -dv 1 $bulletCtrl;
+	//set keys based on playback range
+	setKeyframe -at $bulletAttr -t $playbackMin -v $playbackMin -itt linear -ott linear $bulletCtrl ;
+	setKeyframe -at $bulletAttr -t $playbackMax -v $playbackMax -itt linear -ott linear $bulletCtrl ;
+	
+	//grab the bullet time curve
+	string $bulletCurve[] = `listConnections -t animCurve $bulletCtrl`; 
+	connectAttr -f time1.outTime ($bulletCurve[0]  + ".input");
+	
+	select $userSelection ; 
+	
+	//sidebar
+	select -hi ; 
+
+	//grab the children of the selected objects for later us
+	$children = `ls -sl` ;
+	
+	//filter through list and grab just the meshes
+	$allMeshes = `ls -sl -type mesh`;
+	//grab any curves
+	$allCurves = `ls -sl -type nurbsCurve` ;
+	
+	//filter through the selection list for motionpath nodes
+	string $animMotionPaths[] = `listConnections -t motionPath $allCurves`; 
+	
+	//grab the anim curves for each motion path
+	string $motionPathCurves[] = `listConnections -t animCurve $animMotionPaths`; 
+	
+	//attach the bullet time control to the motion paths if any 
+	if (size ($motionPathCurves) > 0){
+	    for ($i = 0; $i < size ($motionPathCurves); $i++){
+	        //prepare the string variables for source
+			string $sourceBulletAttr = ($bulletCtrl + "." + $bulletAttr);
+			//prepare the string variables for destinaton
+			string $destBulletAttr = ($motionPathCurves[$i] + ".input");
+			connectAttr -f $sourceBulletAttr $destBulletAttr;
+			
+			}
+		}
+
+	//cycle through each mesh to find the deformers and hook up the bullet for each anim curve
+	for($mesh in $allMeshes) {
+	    //grab the deformer stack using the jg mel script
+	    string $currentDeformers[] = `jgReturnMeshDeformers $mesh` ;
+	    //cycle through each deformer to check for time attribute
+	    	if (size ($currentDeformers) > 0){
+		        for ($i = 0; $i < size ($currentDeformers); $i++){
+		            //prepare the string variables for source
+			    	string $sourceBulletAttr = ($bulletCtrl + "." + $bulletAttr);
+		            if (`attributeExists "time" $currentDeformers[$i]`) {
+		                connectAttr -f $sourceBulletAttr ($currentDeformers[$i] + ".time");
+		            }    
+	        
+	        	}
+			}
+		
+	    
+	    //just in case the variable returns empty we'll skip the warning
+	    string $animdeformerCurves[] = `listConnections -t animCurve $currentDeformers`;
+	    //logic wise there is something popping a warning here, test with error checking in the future
+	    if (size ($animdeformerCurves) > 0) {
+	        
+	        //hook up bullet time to deformer curves
+	        for ($i = 0; $i < size ($animdeformerCurves); $i++){
+	            //prepare the string variables for source
+			    string $sourceBulletAttr = ($bulletCtrl + "." + $bulletAttr);
+			    //prepare the string variables for destinaton
+			    string $destBulletAttr = ($animdeformerCurves[$i] + ".input");
+			    //check if attribute is already connected to avoid warning
+			        if ((`isConnected $sourceBulletAttr $destBulletAttr`) == 0){
+			        connectAttr -f $sourceBulletAttr $destBulletAttr;
+			        }
+			
+			}
+	    }
+    }
+     
+    
+     
+     
+	
+	
+	//grab all the curves from the user selection
+	string $animCurves[] = `listConnections -t animCurve $childNodes`; 
+	
+	if (size ($animCurves) > 0){
+	    for ($i = 0; $i < size ($animCurves); $i++){
+	        //prepare the string variables for source
+			string $sourceBulletAttr = ($bulletCtrl + "." + $bulletAttr);
+			//prepare the string variables for destinaton
+			string $destBulletAttr = ($animCurves[$i] + ".input");
+			connectAttr -f $sourceBulletAttr $destBulletAttr;
+			
+			}
+		}
+
+}

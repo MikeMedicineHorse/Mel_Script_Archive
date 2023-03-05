@@ -1,0 +1,16 @@
+/**********************************************************************************************
+Procedure: mh_playbackToRender()
+Version: 1.0
+Date: 07-08-10
+Description: This procedure will set the render range to the playback range
+**********************************************************************************************/
+
+
+global proc mh_playbackToRender(){
+	//set start and end frame from playback range
+	float $playbackMin = `playbackOptions -q -min`;
+	float $playbackMax = `playbackOptions -q -max`;
+
+	setAttr "defaultRenderGlobals.startFrame" $playbackMin;
+	setAttr "defaultRenderGlobals.endFrame" $playbackMax;
+}

@@ -1,0 +1,40 @@
+/**********************************************************************************************
+Procedure: mh_createPopFrameDown()
+Version: 1.0
+Date: 06-29-10
+Description: This procedure will take selected transforms and pop frame to not visible
+**********************************************************************************************/
+
+
+global proc mh_createPopFrameDown()
+{
+	//store the user selection
+	string $userSelection[] = `ls -sl`;
+	
+	//filter out the transforms of the current selection
+	string $transforms[] = `ls -sl -type "transform"`;
+	
+	float $currentFrame = `currentTime -q ` ; 
+
+	for ($transform in $transforms){
+		//First make the visibity keyable
+		setAttr -lock false -keyable true ($transform + ".v");
+		
+		//select transform
+		select -r $transform ; 
+		
+		//set a key for visible
+		setKeyframe -v 0 -at v -t $currentFrame ;
+		
+		//set up the popFrame
+		setKeyframe -v 1 -at v -t ($currentFrame - 1) ;
+	
+	}
+	//restore the user selection
+	select -replace $userSelection;
+	
+	//GhettoRefresh
+	playButtonStepBackward ;
+	playButtonStepForward ;
+	
+}

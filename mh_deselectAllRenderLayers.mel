@@ -1,0 +1,36 @@
+/**********************************************************************************************
+Procedure: mh_deselectAllRenderLayers()
+Version: 1.0
+Date: 05-08-09
+Description: This procedure will make all render layers not renderable
+**********************************************************************************************/
+
+global proc mh_deselectAllRenderLayers()
+{
+	//Retain current layer for animator
+	string $userCurrentLayer = `editRenderLayerGlobals -q -currentRenderLayer`;
+	
+	//add render layers to string array
+	string $layers[] = `ls -type "renderLayer"`;
+	
+	string $layersSize = size ($layers);
+	
+	if ($layersSize == 1){
+		error "no render layers found";
+	}
+	
+	//set the default layer as the current layer--> need this to delete layers
+	editRenderLayerGlobals -currentRenderLayer defaultRenderLayer;
+
+	//loop through the layers bypassing the first one and delete them
+	for ($i = 0; $i < size ($layers); $i++){
+		setAttr ($layers[$i] + ".renderable") 0 ;
+	}
+	
+	//restore the user selection 
+	editRenderLayerGlobals -currentRenderLayer $userCurrentLayer;
+	
+	print "Made all layers NOT renderable.\r";
+}
+
+

@@ -1,0 +1,32 @@
+/**********************************************************************************************
+Procedure: mh_deleteRenderLayers()
+Version: 1.0
+Date: 10-31-08
+Description: This procedure will delete all user generated render layers
+**********************************************************************************************/
+
+global proc mh_deleteRenderLayers()
+{
+	//add render layers to string array
+	string $layers[] = `ls -type "renderLayer"`;
+	
+	string $layersSize = size ($layers);
+	
+	if ($layersSize == 1){
+		error "no render layers found";
+	}
+	
+	//set the default layer as the current layer--> need this to delete layers
+	editRenderLayerGlobals -currentRenderLayer defaultRenderLayer;
+
+	//loop through the layers bypassing the first one and delete them
+	for ($i = 0; $i < size ($layers); $i++){
+		delete $layers[$i];
+	}
+	
+	setAttr "defaultRenderLayer.renderable" 1;
+	
+	print "All render layers deleted successfully!....but why? :)\r";
+}
+
+

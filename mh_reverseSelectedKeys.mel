@@ -1,0 +1,17 @@
+/**********************************************************************************************
+Procedure: mh_reverseSelectedKeys()
+Version: 1.0
+Date: 01-27-10
+Description: This procedure reverses the selected animation keys
+**********************************************************************************************/
+
+
+global proc mh_reverseSelectedKeys()
+{	        
+	$lastKey = `keyframe -query -lastSelected -timeChange`;
+	$allKeys = `keyframe -query -sl -timeChange`;
+	int $firstKeyInt = $allKeys[0];
+	int $lastKeyInt = $lastKey[0];
+	$timePivot = ((($lastKeyInt - $firstKeyInt)* .5)+ $firstKeyInt) ;
+	scaleKey -timeScale -1.0 -timePivot $timePivot;
+}

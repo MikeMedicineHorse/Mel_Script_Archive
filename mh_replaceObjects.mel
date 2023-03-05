@@ -1,0 +1,124 @@
+/**********************************************************************************************
+Procedure: mh_replaceObjects()
+Version: 1.0
+Date: 08-05-10
+Description: This procedure will replace the selected objects with the last selected object. 
+1. select objects to be replaced 2. then select the new object.  
+3. then type "mh_replaceObjects" in the script line to run the command.
+note: this script deletes the old objects. 
+
+For the future:
+make ui
+perhaps load target then have user select objects to be replaced.
+instance toggle (group option?)
+delete/hide/keep objects
+copy animation yes/no  if so .t .r .s?
+copy user defined attrs checkbox/animation--perhaps wise to do this by default so animation...
+check is clean.
+
+workflow:
+1.select (load into ui) new object
+2.select objects to be replaced
+3.user defined command replace (instance/anim/attrs)
+4.execute
+
+reference scripts:
+findAndReplace.mel
+randSwap.mel
+jpTransferAnim_v1.5.mel
+
+**********************************************************************************************/
+
+
+global proc mh_replaceObjects()
+{
+	//store the user selection
+	string $userSelection[] = `ls -sl`;
+		
+	//filter out the transforms of the current selection
+	string $transforms[] = `ls -sl -type "transform"`;
+	
+	//figure out the max size of the selection
+	int $targetSize = `size $transforms` ;
+	
+	//minus the size to account for 0 based array-thus grabbing the target ID in the array
+	int $targetID = $targetSize - 1 ; 
+	
+	//declaring the target based on the size
+	string $targetObject = $transforms[$targetID] ;
+	
+	//declare the shapes variable
+	string $newObjects[];
+	
+	// the temp positions are held in these
+	float $transX, $transY, $transZ, $rotX, $rotY, $rotZ, $scaleX, $scaleY, $scaleZ;
+	vector $tempVector;
+
+	
+	//buffer variable for adding the new objects
+	$i= 0 ;
+
+	for ($transform in $transforms){
+		
+		if ($transform != $targetObject ){
+			
+			//duplicate the object
+			$newObj = `duplicate -ic $targetObject`;
+			
+			//user version broke
+			$tempVector = `xform -q -ws -rp $transform`;
+			$transX = $tempVector.x;
+			$transY = $tempVector.y;
+			$transZ = $tempVector.z;
+			
+			setAttr ($newObj[0] + ".translate") -type "double3" $transX $transY $transZ ;
+					
+			//grab the parent of the object to be replaced and parent our duplicate
+			string $objParent[] = `listRelatives -p -f $transform`;
+			parent $newObj[0] $objParent ;
+				
+			//$transX = `getAttr ($transform + ".translateX")`;
+			//$transY = `getAttr ($transform + ".translateY")`;
+			//$transZ = `getAttr ($transform + ".translateZ")`;
+			
+			$rotX = `getAttr ($transform + ".rotateX")`;
+			$rotY = `getAttr ($transform + ".rotateY")`;
+			$rotZ = `getAttr ($transform + ".rotateZ")`;
+			$scaleX = `getAttr ($transform + ".scaleX")`;
+			$scaleY = `getAttr ($transform + ".scaleY")`;
+			$scaleZ = `getAttr ($transform + ".scaleZ")`;
+			
+			setAttr ($newObj[0] + ".rotate") -type "double3" $rotX $rotY $rotZ ;
+			//setAttr ($newObj[0] + ".scale") -type "double3" $scaleX $scaleY $scaleZ;
+			
+			//check for animation before copying
+			
+			//below is for future updating--allowing user defined channel control
+			//float $isKeyed = `copyKey -time ":" -cb anim -at $atr $animObj[0]`;
+			
+			//store the keyed objects in a variable
+			float $isKeyed = `copyKey -time ":" -attribute "translate" -attribute "rotate" $transform `;
+			
+			//if the keyed variable is more than 0 (actually has key data in the clipboard) then paste
+			if ($isKeyed != 0){
+				pasteKey $newObj[0] ;
+			}
+			
+
+			
+			
+			//grab the shapes of the transform		
+			//$shapes = `listRelatives -type nurbsCurve $transform` ;
+	
+			//delete the object
+			delete $transform ;
+			
+			$newObjects[$i] = $newObj[0] ;
+			
+			$i ++ ;
+		}
+	
+	}
+	//restore the user selection
+	select -replace $newObjects;	
+}

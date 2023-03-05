@@ -1,0 +1,9 @@
+catch(`setAttr defaultRenderGlobals.animation 1`);
+		catch(`setAttr defaultRenderGlobals.putFrameBeforeExt 1`);
+		catch(`setAttr defaultRenderGlobals.periodInExt 2`);
+
+		if (`getAttr defaultRenderGlobals.outFormatControl` == 1)
+			catch(`setAttr defaultRenderGlobals.outFormatControl 0`);
+			
+			//setMayaSoftwareFrameExt <----- found here
+			//C:/Program Files/Autodesk/Maya2009/scripts/others/setMayaSoftwareFrameExt.mel

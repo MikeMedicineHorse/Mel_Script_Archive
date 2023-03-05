@@ -1,0 +1,117 @@
+/**********************************************************************************************
+Procedure: mh_setupHeroOB()
+Version: 2.0
+Date: 06-15-10
+Description: This procedure sets up a ob render layer for the currently selected
+object for
+**********************************************************************************************/
+
+
+global proc mh_setupHeroOB()
+{
+	
+	//***Gumby bug with global layer--consider adding objects from current render layer rather than createRenderLayer -g 
+	//*update 06-15-10-added single shader creation
+	//*update 06-15-10-added copy layer functionality to address gumby bug
+		
+	string $userSelection[] = `ls -sl`;
+	string $allGeometry[] = `ls -type mesh -type nurbsSurface -type subdiv` ;
+	string $obBlackSG = "OB_black_00_SG" ;	
+	string $obWhiteSG = "OB_white_00_SG" ;	
+	
+	//V2.0 Edit
+	//Retain current layer for animator
+	string $userCurrentLayer = `editRenderLayerGlobals -q -currentRenderLayer`;
+	//V2.0 end
+	
+	//store all the cameras--can't remember why
+	string $allCameras[] = `ls -ca`;
+	
+	string $heroName;
+	string $result = `promptDialog
+							-title "Hero Buffer Creator"
+							-message "Enter name for layer:"
+							-button "OK"
+							-button "Cancel"
+							-defaultButton "OK"
+							-cancelButton "Cancel"
+							-dismissString "Cancel"`;
+							
+	if ($result == "OK"){
+		$heroName = `promptDialog -query`;
+		string $copiedLayer[] = `duplicate -inputConnections $userCurrentLayer` ;
+		renderLayerEditorItemOnRename $copiedLayer[0] $heroName;
+		//createRenderLayer -g -n $heroName;
+		editRenderLayerGlobals -currentRenderLayer $heroName;
+		
+		//First create the shaders
+		if (`objExists OB_black_00`){
+				print "Black OB shader exists already.\r";
+				$obBlackSG = "OB_black_00_SG" ;		
+			}else{
+				// create OB_black shader if not already created
+				string $obBlackShader = `shadingNode -asShader surfaceShader -n OB_black_00` ;
+				$obBlackSG = `sets -renderable true -noSurfaceShader true -empty -name ($obBlackShader + "_SG")` ;
+				connectAttr -f ($obBlackShader + ".outColor") ($obBlackSG + ".surfaceShader") ;
+			}
+		
+		if (`objExists OB_white_00`){
+				print "White OB shader exists already.\r";
+				$obWhiteSG = "OB_white_00_SG" ;			
+			}else{
+				//create OB_white shader if not already created
+				string $obWhiteShader = `shadingNode -asShader surfaceShader -n OB_white_00` ;
+				$obWhiteSG = `sets -renderable true -noSurfaceShader true -empty -name ($obWhiteShader + "_SG")` ;
+				connectAttr -f ($obWhiteShader + ".outColor") ($obWhiteSG + ".surfaceShader") ;
+				setAttr ($obWhiteShader + ".outColor") -type double3 1 1 1 ;
+			}		
+		
+		if (`objExists mentalrayGlobals`){
+			//turn off raytracing as overide which will turn off area shadows
+			editRenderLayerAdjustment "miDefaultOptions.rayTracing";
+			setAttr "miDefaultOptions.rayTracing" 0;
+				
+			//make sure primary renderer is scanline as override
+			editRenderLayerAdjustment "miDefaultOptions.scanline";
+			setAttr "miDefaultOptions.scanline" 1;
+				
+			editRenderLayerAdjustment "miDefaultOptions.minSamples";
+			setAttr "miDefaultOptions.minSamples" 0;
+				
+			editRenderLayerAdjustment "miDefaultOptions.maxSamples";
+			setAttr "miDefaultOptions.maxSamples" 2;	
+			
+		}else{
+			warning ("MentalRay nodes not generated yet. AntiAliasing overrides not set.");
+		}
+		
+		//V2.0 EDIT here  **set camera to black as override
+		for ($i = 0; $i < size ($allCameras); $i++){
+			editRenderLayerAdjustment ($allCameras[$i] + ".backgroundColor");
+			setAttr ($allCameras[$i] + ".backgroundColor") -type double3 0 0 0 ;
+			}		
+		//END V2.0 EDIT
+		
+		//selects all objects and assigns OB_black shader
+		//select $allGeometry ;
+		renderLayerEditorSelectObjects RenderLayerTab $heroName;
+		sets -e -forceElement $obBlackSG ;
+		select -cl;
+	
+		//add white shader to current selection
+		select -replace $userSelection;
+		sets -e -forceElement $obWhiteSG ;
+
+		//just in case replace the initial selection
+		select -replace $userSelection;
+		
+		//V2.0 Edit
+		editRenderLayerGlobals -currentRenderLayer $userCurrentLayer;
+		//V2.0 End Edit
+		
+		print "Hero OB setup completed successfully.\r";
+	}	
+			
+}
+	
+	

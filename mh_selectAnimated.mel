@@ -1,0 +1,40 @@
+/**********************************************************************************************
+Procedure: mh_selectAnimated()
+Version: 1.0
+Date: 01-27-10
+Description: This procedure selects children nodes that have keys.
+**********************************************************************************************/
+
+
+global proc mh_selectAnimated()
+{	
+	//grab the root level objects
+	$userSelection = `ls -sl` ;
+	
+	//select the child objects
+	select -hi ; 
+	
+	//redeclare the selection variable
+	$userSelection = `ls -sl` ;
+	
+	//wipe the selection to prepare for animation filtering
+	select -cl ;
+	
+	for ($i = 0; $i < size ($userSelection); $i++){
+		//this checks to see if a given node in the hierarachy has animation connected to it
+		$animCheck = `listConnections -t animCurve $userSelection[$i]` ;
+		
+		//intitialize the variable used to see if a node has animation
+		$animBuffer = size($animCheck) ;
+		
+		//if any anim curves were connect the variable would be greater than 0 so...
+		if ($animBuffer>0){
+			select -add $userSelection[$i] ;
+			
+		//wipe the buffer variable to prepare for checking the next object	
+		$animBuffer = 0 ;
+		}
+	}			
+}
+	
+	

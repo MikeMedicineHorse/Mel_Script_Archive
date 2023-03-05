@@ -1,0 +1,31 @@
+/**********************************************************************************************
+Procedure: mh_removeAnimController()
+Version: 1.0
+Date: 06-30-10
+Description: This procedure will take selected transforms and remove any shape nodes from the transforms
+**********************************************************************************************/
+
+
+global proc mh_removeAnimController()
+{
+	//store the user selection
+	string $userSelection[] = `ls -sl`;
+	
+	//filter out the transforms of the current selection
+	string $transforms[] = `ls -sl -type "transform"`;
+	
+	//declare the shapes variable
+	string $shapes[];
+
+	for ($transform in $transforms){
+		
+		//grab the shapes of the transform		
+		$shapes = `listRelatives -type nurbsCurve $transform` ;
+
+		//delete the shape nodes
+		delete $shapes  ;
+	
+	}
+	//restore the user selection
+	select -replace $userSelection;	
+}

@@ -1,0 +1,29 @@
+/**********************************************************************************************
+Procedure: mh_resolutionGate()
+Date: 01-26-09
+Description: This procedure toggles the resoltionGate on/off
+**********************************************************************************************/
+
+global proc mh_resolutionGate()
+{
+	//declare the variable
+	string $viewCamera;
+
+	// First get the panel that currently has focus
+	string $panel = `getPanel -wf`;
+
+	// Compare the panel's type to confirm it is a "modelPanel"
+	if ( "modelPanel" == `getPanel -to $panel` ){
+		// Get the name of the camera using the ‘modelEditor’ command
+		$viewCamera = `modelEditor -q -camera $panel`;
+  	}
+  	$resGate = `getAttr ($viewCamera + ".displayResolution" )` ;
+  	
+  	if ($resGate == 1){
+	  	setAttr ($viewCamera + ".displayResolution" ) 0 ; 
+  	}else{
+	  	setAttr ($viewCamera + ".displayResolution" ) 1 ;
+  	}
+	  	
+	
+}

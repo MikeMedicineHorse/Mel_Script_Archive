@@ -1,0 +1,35 @@
+global proc mh_deselect()
+{
+	nameCommand 
+		//annotations are required
+		-annotation "mh_deselect" 
+
+		//the command actually executed when the hotkey is pressed
+		-command "mh_deselectCommand"
+
+		//the hotkey executes the nameCommand which executes the command
+		//hotkey-->nameCommand-->Command
+		mh_deselectHotkey ;
+	
+	if ((`hotkey -query -ctl -alt "d"`) == 0 ){
+
+		//key to remember the hotkey invokes the name command
+		hotkey -k "d" -ctl -alt -name "mh_deselectHotkey" ;
+	}else{
+		print "Hotkey already assigned to another command.\r" ;
+
+		/*
+		//resets/releases hotkey--just FYI
+		hotkey -k "d" -ctl -alt -name "" ;
+		*/
+	}
+}
+
+global proc mh_deselectCommand()
+{
+	//deselect
+	select -cl ;
+}
+
+	
+

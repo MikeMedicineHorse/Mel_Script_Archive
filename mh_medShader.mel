@@ -1,0 +1,127 @@
+/**********************************************************************************************
+Procedure: mmh_medShader()
+Version: 1.0
+Date: 08-17-10
+Description: Creates a microscope shader in Mental Ray
+
+**********************************************************************************************/
+
+global proc mh_medShader() 
+{
+	//create the mia material node
+	string $miaMaterial = `mrCreateCustomNode -asShader "" mia_material_x`;
+
+	//tweak some material attributes
+	//turn off reflections 
+	setAttr ($miaMaterial +".refl_hl_only") 1;
+	//smooth out the spec
+	setAttr ($miaMaterial + ".refl_gloss") 0.3;
+
+	//create the layered texture
+	string $layerTexColor = `shadingNode -asTexture layeredTexture`;
+	//set the color to black,alpha and mode	
+	setAttr ($layerTexColor + ".inputs[0].color") -type "double3" 0 0 0;
+	setAttr ($layerTexColor + ".inputs[0].alpha") 1;
+	setAttr ($layerTexColor + ".inputs[0].blendMode") 1;
+
+	//connect the layered texture to the mia material
+	connectAttr -f ($layerTexColor +".outColor") ($miaMaterial +".additional_color") ;
+	connectAttr -f ($layerTexColor +".outAlpha") ($miaMaterial +".additional_colorA") ;
+
+	//create the ramp shader
+	string $rampShader = `shadingNode -asShader rampShader` ;
+	string $rampShaderSG = `sets -renderable true -noSurfaceShader true -empty -name ($rampShader + ".SG")`;
+	//connect the shader to the shading group
+	connectAttr -f ($rampShader +".outColor") ($rampShaderSG +".surfaceShader");
+
+	//making the ramp a straight fresnel-no diffuse/reflections
+	setAttr ($rampShader +".color[0].color_Color") -type double3 0 0 0 ;
+	setAttr ($rampShader +".diffuse") 0;
+	setAttr ($rampShader +".specularColor[0].specularColor_Color") -type double3 0 0 0 ;
+	setAttr ($rampShader +".reflectivity[0].reflectivity_FloatValue") 0;
+	setAttr ($rampShader +".incandescence[1].incandescence_Color") -type double3 0 0 0;
+	setAttr ($rampShader +".incandescence[1].incandescence_Position") 0.952756;
+	setAttr ($rampShader +".incandescence[1].incandescence_Interp") 1;
+	setAttr ($rampShader +".incandescence[1].incandescence_Position") 1;
+	setAttr ($rampShader +".incandescence[0].incandescence_Color") -type double3 1 1 1 ;
+
+	//connect the ramp to the layered texture
+	connectAttr -force ($rampShader +".outColor") ($layerTexColor + ".inputs[0].color");
+	setAttr ($layerTexColor + ".inputs[0].alpha") 0.5;
+	setAttr ($layerTexColor + ".inputs[0].blendMode") 1;
+
+	//create the layered texture for the bump
+	string $layerTexBump = `shadingNode -asTexture layeredTexture`;
+	//set the color to black,alpha and mode	
+	setAttr ($layerTexBump + ".inputs[0].color") -type "double3" 0 0 0;
+	setAttr ($layerTexBump + ".inputs[0].alpha") 1;
+	setAttr ($layerTexBump + ".inputs[0].blendMode") 1;
+
+	//create the 3D noises
+	string $noiseA = `shadingNode -asTexture volumeNoise`;
+	string $noisePlacement = `shadingNode -asUtility place3dTexture`;
+	connectAttr ($noisePlacement +".wim[0]") ($noiseA + ".pm");
+	//smooth setting for the noise
+	setAttr ($noiseA + ".falloff") 1;
+	setAttr ($noiseA + ".alphaIsLuminance") true;
+	setAttr ($noiseA + ".local") 1;
+	setAttr ($noiseA + ".scaleX") 4;
+	setAttr ($noiseA + ".scaleY") 4;
+	setAttr ($noiseA + ".scaleZ") 4;
+
+	string $noiseB = `shadingNode -asTexture volumeNoise`;
+	connectAttr ($noisePlacement + ".wim[0]") ($noiseB + ".pm");
+	//smooth setting for the noise
+	setAttr ($noiseB + ".noiseType") 0;
+	setAttr ($noiseB + ".alphaIsLuminance") true;
+	setAttr ($noiseB + ".local") 1;
+
+	//hook up the shaders to the layered texture
+	connectAttr -force ($noiseA + ".outColor") ($layerTexBump + ".inputs[1].color");
+	connectAttr -force ($noiseB + ".outColor") ($layerTexBump + ".inputs[0].color");
+	setAttr ($layerTexBump + ".alphaIsLuminance") true;
+	//adjust the alpha to taste
+	setAttr ($layerTexBump + ".inputs[0].alpha") 0.14878;
+
+	
+	//create the bump nodes
+	string $noiseAbump = `shadingNode -asUtility bump3d`;
+	//set a default size
+	setAttr ($noiseAbump + ".bumpDepth") 0.3;
+	//hook up the layered tex to the bump node	
+	connectAttr -f ($layerTexBump + ".outAlpha") ($noiseAbump + ".bumpValue") ;
+	//hook up the bump node to the mia material
+	connectAttr -force ($noiseAbump + ".outNormal") ($miaMaterial + ".standard_bump") ;
+	
+	/*  -->currently crashing
+	//create the custom attrs for the material and hook them up
+	addAttr -ln "noiseScaleA"  -at double  -min 0 -dv 4 $miaMaterial;
+	setAttr -e-keyable true ($miaMaterial + ".noiseScaleA");
+	addAttr -ln "noiseScaleB"  -at double  -min 0 -dv 1 $miaMaterial;
+	setAttr -e-keyable true ($miaMaterial + ".noiseScaleB");
+	connectAttr -f ($miaMaterial + ".noiseScaleA") ($noiseA + ".scaleX") ;
+	connectAttr -f ($miaMaterial + ".noiseScaleA") ($noiseA + ".scaleY") ;
+	connectAttr -f ($miaMaterial + ".noiseScaleA") ($noiseA + ".scaleZ") ;
+	connectAttr -f ($miaMaterial + ".noiseScaleB") ($noiseB + ".scaleX") ;
+	connectAttr -f ($miaMaterial + ".noiseScaleB") ($noiseB + ".scaleY") ;
+	connectAttr -f ($miaMaterial + ".noiseScaleB") ($noiseB + ".scaleZ") ;
+	*/
+	//setup the colors
+	setAttr ($miaMaterial + ".diffuse") -type double3 0.0925 0.29625 0.5 ;
+
+	setAttr ($rampShader +".incandescence[2].incandescence_Color") -type double3 0.503937 0.503937 0.503937;
+	setAttr ($rampShader +".incandescence[2].incandescence_Position") 0.496063;
+	setAttr ($rampShader +".incandescence[2].incandescence_Interp") 1;
+	setAttr ($rampShader +".incandescence[2].incandescence_Position") 0.5;
+
+	setAttr ($rampShader +".incandescence[2].incandescence_Color") -type double3 0.576 0.511843 0.066816 ;
+
+	setAttr ($rampShader +".incandescence[1].incandescence_Color") -type double3 0.15 0.078175 0.0174 ;
+
+	//for setting interp for ramp shader to spline
+	setAttr ($rampShader +".incandescence[0].incandescence_Interp") 3;
+	setAttr ($rampShader +".incandescence[2].incandescence_Interp") 3;
+	setAttr ($rampShader +".incandescence[1].incandescence_Interp") 3;
+	
+	
+}

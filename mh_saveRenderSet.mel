@@ -1,0 +1,90 @@
+/**********************************************************************************************
+Procedure: mh_saveRenderSet()
+Version: 1.0
+Date: 05-08-09
+Description: This procedure will delete all user generated render layers
+**********************************************************************************************/
+
+global proc mh_saveRenderSet()
+{
+	//grab the user selection for good form 
+	string $userSelection[] = `ls -sl` ; 
+	
+	//declare the master group variable
+	$medMasterGroup = "Med_RenderSets" ;
+	
+	//Retain current layer for animator
+	string $userCurrentLayer = `editRenderLayerGlobals -q -currentRenderLayer`;
+	
+	//add render layers to string array
+	string $layers[] = `ls -type "renderLayer"`;
+	
+	string $layersSize = size ($layers);
+	
+	//set the default layer as the current layer--> need this to delete layers
+	//editRenderLayerGlobals -currentRenderLayer defaultRenderLayer;
+	
+	string $heroName;
+	string $result = `promptDialog
+							-title "Create Render Selection"
+							-message "Enter name for set:"
+							-button "OK"
+							-button "Cancel"
+							-defaultButton "OK"
+							-cancelButton "Cancel"
+							-dismissString "Cancel"`;
+							
+	if ($result == "OK"){
+		$heroName = `promptDialog -query`;
+			
+		string $renderSelection = `group -em -n ($heroName + "_selection_00")` ;
+	
+		setAttr -lock true -keyable false ($renderSelection + ".tx");
+		setAttr -lock true -keyable false ($renderSelection + ".ty");
+		setAttr -lock true -keyable false ($renderSelection + ".tz");
+		setAttr -lock true -keyable false ($renderSelection + ".rx");
+		setAttr -lock true -keyable false ($renderSelection + ".ry");
+		setAttr -lock true -keyable false ($renderSelection + ".rz");
+		setAttr -lock true -keyable false ($renderSelection + ".sx");
+		setAttr -lock true -keyable false ($renderSelection + ".sy");
+		setAttr -lock true -keyable false ($renderSelection + ".sz");
+		setAttr -lock true -keyable false ($renderSelection + ".v");
+	
+		select -r $renderSelection ;
+	
+		$n = 0 ;
+	
+		//loop through the layers and add attrs if they are renderable
+		for ($i = 0; $i < size ($layers); $i++){
+			if (getAttr ($layers[$i] + ".renderable") == 1){
+				addAttr -ln ("set_" + $n) -dt "string" ; 
+				setAttr -type "string" ($renderSelection + "." + "set_" + $n) $layers[$i] ;
+				$n++ ;
+				}
+			}
+		if (`objExists "Med_RenderSets"`){
+			$medMasterGroup = "Med_RenderSets" ;
+		}else{
+			$medMasterGroup = `group -em -n "Med_RenderSets"` ;
+			setAttr -lock true -keyable false ($medMasterGroup + ".tx");
+			setAttr -lock true -keyable false ($medMasterGroup + ".ty");
+			setAttr -lock true -keyable false ($medMasterGroup + ".tz");
+			setAttr -lock true -keyable false ($medMasterGroup + ".rx");
+			setAttr -lock true -keyable false ($medMasterGroup + ".ry");
+			setAttr -lock true -keyable false ($medMasterGroup + ".rz");
+			setAttr -lock true -keyable false ($medMasterGroup + ".sx");
+			setAttr -lock true -keyable false ($medMasterGroup + ".sy");
+			setAttr -lock true -keyable false ($medMasterGroup + ".sz");
+			setAttr -lock true -keyable false ($medMasterGroup + ".v");
+		}
+		
+		select -r $renderSelection ;
+		select -add $medMasterGroup ;
+		parent ;
+	}
+	//restore the user selection 
+	select -r $userSelection ;	
+
+}
+
+

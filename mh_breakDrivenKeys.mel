@@ -1,0 +1,75 @@
+/**********************************************************************************************
+Procedure: mh_bulletTime()
+Version: 1.0
+Date: 09-18-15
+Description: This procedure hooks up a bullet time curve to the selected objects 
+**********************************************************************************************/
+
+
+global proc mh_breakDrivenKeys(){
+	
+	
+	//start by storing the original selection
+	$userSelection = `ls -sl` ;
+	
+	//below works on lattice
+	string $childNodes[] = `listRelatives -c -ad -pa $userSelection`;
+	
+	//blend shape argument is $userSelection, lattice is $childNodes
+	string $curves[] = `listConnections -t animCurve $userSelection`;
+
+	
+	
+	
+	//connectAttr -f time1.outTime ($bulletCurve[0]  + ".input");
+	
+
+	
+	
+	//grab all the curves from the user selection
+	//string $animCurves[] = `listConnections -t animCurve $childNodes`; 
+	
+	for($curve in $curves)
+	{
+		string $type = "animCurveTL";
+		string $old_type = `objectType $curve `;
+		switch($old_type)
+		{
+			case "animCurveUL":
+				break;
+			case "animCurveUA":
+				$type = "animCurveTA";
+				break;
+			case "animCurveUU":
+				$type = "animCurveTU";
+				break;
+			default:
+				error("Not prepared to handle type: " + $old_type);
+		}
+		string $new_curve = `createNode $type -n ($curve +"_freedom")`;
+		float $values[] = `keyframe -q -vc $curve `;
+		float $times[] = `keyframe -q -fc $curve `;
+		for($i=0;$i<`size $times`; $i++ )
+		{
+			$newTime = ($times[$i] * 26); 
+			setKeyframe -t $newTime  -v $values[$i] $new_curve;
+		}
+		//connectAttr ($driver+"."+$attr) ($new_curve+".input");
+		string $conns[] = `listConnections -plugs 1 ($curve +".output")`;
+		delete $curve ;
+		connectAttr ($new_curve+".output") ($conns[0]);
+		//scaleKey -float (""+$driven_min+":"+$driven_max) -newStartFloat $min -newEndFloat $max $new_curve;
+	}
+	/*
+	if (size ($animCurves) > 0){
+	    for ($i = 0; $i < size ($animCurves); $i++){
+	        
+			//prepare the string variables for destinaton
+			//string $destBulletAttr = ($animCurves[$i] + ".input");
+			connectAttr -f time1.outTime ($animCurves[$i]  + ".input");
+			
+			}
+		}
+		*/
+
+}

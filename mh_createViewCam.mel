@@ -1,0 +1,114 @@
+/**********************************************************************************************
+Procedure: mh_createViewCam{)
+Version: 1.0
+Date: 05-11-09
+Description: This procedure creates a camera from the current view
+**********************************************************************************************/
+
+
+global proc mh_createViewCam()
+{
+	//user selection
+	string $userSelection[] = `ls -sl` ;
+	
+	select -cl ;
+	
+	//first we grab the current view camera
+	//declare the variable
+	string $viewCamera;
+
+	// First get the panel that currently has focus
+	string $panel = `getPanel -wf`;
+
+	// Compare the panel's type to confirm it is a "modelPanel"
+	if ( "modelPanel" == `getPanel -to $panel` ){
+		// Get the name of the camera using the ‘modelEditor’ command
+		$viewCamera = `modelEditor -q -camera $panel`;
+  	}else{
+	  	error "please have view panel active" ;
+  	}
+	
+	//remember to make rotates non keyable
+	
+	string $newCamera[] = `camera -coi 5 -lsr 1 -cs 1 -hfa 1.41732 -vfa 0.94488 -mb 0 -sa 144 -o 0 -ow 30 -n "med_cam_00" ` ;
+	
+	
+  	//grab the view camera attrs	
+  	//declare the shape variable
+	string $shapes[];
+	
+	$shapes[0] = $viewCamera ;
+
+	if ( "transform" == `nodeType $viewCamera` )
+	// If given node is not a transform, assume it is a shape
+	// and pass it through
+	{
+		$shapes = `listRelatives -fullPath -shapes $viewCamera`;
+	}
+	
+	string $attrList[] ;
+	$attrList = `listAttr -w -s -k $shapes[0]` ;
+	
+	for ($i = 0; $i < size ($attrList); $i++){
+		connectAttr -f ($shapes[0] + "." + $attrList[$i]) ($newCamera[1] + "." + $attrList[$i]) ;
+		disconnectAttr ($shapes[0] + "." + $attrList[$i]) ($newCamera[1] + "." + $attrList[$i]) ;
+		}
+		
+	//manually grab a few attrs that help with consistency
+	$currentFilmFit = `getAttr ($viewCamera + ".filmFit")` ;
+	setAttr ($newCamera[1] + ".filmFit") $currentFilmFit ; 
+	
+	$currentfarClipPlane = `getAttr ($viewCamera + ".farClipPlane")` ;
+	setAttr ($newCamera[1] + ".farClipPlane") $currentfarClipPlane ; 
+	
+	$currentnearClipPlane = `getAttr ($viewCamera + ".nearClipPlane")` ;
+	setAttr ($newCamera[1] + ".nearClipPlane") $currentnearClipPlane ; 
+	
+	$currentoverscan = `getAttr ($viewCamera + ".overscan")` ;
+	setAttr ($newCamera[1] + ".overscan") $currentoverscan ; 
+	
+	$currentdisplayResolution = `getAttr ($viewCamera + ".displayResolution")` ;
+	setAttr ($newCamera[1] + ".displayResolution") $currentdisplayResolution ; 
+	
+	/*
+	string $viewTransform = "" ;
+	string $viewParents[] = `listRelatives -fullPath -parent $viewCamera`;
+	$viewTransform = $viewParents[0];
+	
+	string $newTransform = "" ; 
+	string $newParents[] = `listRelatives -fullPath -parent $newCamera[1]`;
+	$newTransform = $newParents[0];
+	*/
+	
+	//New stuff for Sydley--grab the rotation orders
+	$currentRotationOrder = `getAttr ($viewCamera + ".rotateOrder")` ;
+	setAttr ($newCamera[0] + ".rotateOrder") $currentRotationOrder ; 
+	
+  	//select the objects for constraining
+  	select -r $viewCamera ;
+  	pickWalk -d up ; 
+  	select -add $newCamera[0] ;
+  	
+	//snap the new camera to the current camera
+	mh_centerToObject ;	
+	
+	//forced selection of the new camera
+	select -r $newCamera[0] ;
+		
+	//this looks through the current view with the new camera
+	string $panel = `getPanel -withFocus`;
+		if (`getPanel -typeOf $panel` == "modelPanel"){
+			lookThroughSelected 0 $panel;			
+		} else {
+			warning((uiRes("NotAModelingPanel")));
+		}
+
+	select -r $userSelection ;
+	
+	print ("Camera Setup Complete." + " " + $newCamera[0] + " is active.\r")  ;
+	
+}
+	
+	
+	
+	

@@ -1,0 +1,39 @@
+
+
+
+global proc mh_getAllPolys()
+{
+	//select all the meshes
+	string $allMeshes[] = `ls -type "mesh"` ;
+	
+	//declare my window variable
+	string $myWindow = "meshUI" ;
+	
+	//create UI
+	if (`window -exists $myWindow`){
+		deleteUI $myWindow ;
+	}
+
+	//create window
+	window 
+	      -title "Lists all meshes" 
+	      $myWindow ;
+	
+	columnLayout
+		-adjustableColumn 1 
+		mainCol ;
+
+	textScrollList
+		-height 40 
+		-ams true
+		meshTSL ;
+
+	for ($eachMesh in $allMeshes){
+		textScrollList
+			-edit -append $eachMesh
+			meshTSL ;
+	}
+
+	showWindow $myWindow ;
+
+}	

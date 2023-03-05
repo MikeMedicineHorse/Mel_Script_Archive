@@ -1,0 +1,117 @@
+//select edge ring script example
+polySelect -edgeRing 346 testTube_geo
+
+//first select edge ring to get edges for loopin...
+//then...
+polySelectConstraint -t 0x8000 -pp 4 ;
+// will take selected edge and find the loop for them
+
+string $locators[2]=`ls -sl`;
+// 1st point
+float $point_0x=`getAttr ($locators[0]+".translateX")`;
+float $point_0y=`getAttr ($locators[0]+".translateY")`;
+float $point_0z=`getAttr ($locators[0]+".translateZ")`;
+
+// 2nd point
+float $point_1x=`getAttr ($locators[1]+".translateX")`;
+float $point_1y=`getAttr ($locators[1]+".translateY")`;
+float $point_1z=`getAttr ($locators[1]+".translateZ")`;
+
+
+curve -d 1 -p $point_0x $point_0y $point_0z
+-p $point_1x $point_1y $point_1z;
+
+/*getting edge ring code perhaps
+Do a edge ring (ctrl + rmb) selection and then intersect
+that with edges of the polygon, probably easiet in the gui.
+If you want to script it then its also as easy to assume
+the other edge is edgeindex+2%4 Should yeld same rersont
+even if the quad is VERY maligned (you can get edges in index order with polyinfo).
+*/
+
+//below is a thread related to making a joint at the center of the selected edge loop
+SelectContiguousEdges;
+float $bb[] = `exactWorldBoundingBox -ii 1`;
+$xcenter = ($bb[0]+$bb[3])/2;
+$ycenter = ($bb[1]+$bb[4])/2;
+$zcenter = ($bb[2]+$bb[5])/2;
+string $joint = `joint`;
+move -ws $xcenter $ycenter $zcenter $joint;
+
+===========================
+your theory is fine, and the code you have so far is made to do the first step: collecting all the positions in arrays. but you have made a couple of mistakes in your code:
+
+- you do a double loop through your selection, while you only need one. what would happen with a double loop is that when $i = 0, 
+you'll go through every vertex saving it's position in array index 0.
+so every vertex will override the previous one and in the end 0 will hold the position of the last vertex in your selection.
+then you go to $i = 1 and do the same. so once you finished your double loop, each array index holds the position of the last vertex in your selection.
+
+- you get the pointPosition without defining an object, so maya takes the entire selection.
+
+here is an elegant way of doing it:
+
+CODE
+string $sel[] = `ls -sl -fl`;
+int $size = `size $sel`;
+
+vector $sumOfPos = <<0,0,0>>;
+
+int $i;
+for ($i = 0; $i < $size; $i++) $sumOfPos += `pointPosition -l $sel[$i]`;
+
+vector $averagePos = $sumOfPos/$size;
+
+
+- instead of storing all the positions in arrays, I immediatly make the sum while looping through the selection.
+	I start of with an empty vector and add the position of each element to the sum.
+
+- I use vectors instead of float arrays. vectors are optimized for this kind of work and allow you to do a lot of things a float array wont do. like adding and dividing.
+
+greetz
+Alan 
+
+===================
+here's an even shorter/easier/faster method to get the center of the selected components smile.gif
+
+CODE
+float $bb[6] = `polyEvaluate -bc`;
+vector $center = << ($bb[0]+$bb[1])/2 , ($bb[2]+$bb[3])/2 , ($bb[4]+$bb[5])/2 >>;
+
+==============
+or to make it work not only with poly components but with any kind of selection
+you can use the `exactWorldBoundingBox -ii 1` command instead of `polyEvaluate -bc`
+
+==============
+
+oh, in case of exactWorldBoundingBox, the returning order is a bit different from the polyEvaluate -bc:
+xmin, ymin, zmin, xmax, ymax, zmax
+
+xcenter = ($bb[0]+$bb[3])/2
+ycenter = ($bb[1]+$bb[4])/2
+zcenter = ($bb[2]+$bb[5])/2
+==========
+well if you want some code to operate on a multiple list of items it's essentially just a case of making
+a list of things to operate on (your selected edges), and then iterating through them one by one..
+
+(I don't have Maya at the mo, so this is just very MEL-ish psuedo code!)
+
+CODE
+string $edges[] = `filterExpand -ex 1 -sm 32`;
+
+for ($edge in $edges)
+{
+    select -r $edge;
+
+    //===========================
+    SelectContiguousEdges;
+    float $bb[] = `exactWorldBoundingBox -ii 1`;
+    $xcenter = ($bb[0]+$bb[3])/2;
+    $ycenter = ($bb[1]+$bb[4])/2;
+    $zcenter = ($bb[2]+$bb[5])/2;
+    string $joint = `joint`;
+    move -ws $xcenter $ycenter $zcenter $joint;
+    //===========================
+}
+
+//this mel is executed best by selecting one edge
+===========================

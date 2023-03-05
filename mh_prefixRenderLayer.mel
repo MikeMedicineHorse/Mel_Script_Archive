@@ -1,0 +1,55 @@
+/**********************************************************************************************
+Procedure: mh_prefixRenderLayer()
+Version: 1.0
+Date: 08-24-09
+Description: This procedure sets up a ob render layer for the currently selected
+object for
+**********************************************************************************************/
+
+
+global proc mh_prefixRenderLayer()
+{
+	//Retain current layer for animator
+	string $userCurrentLayer = `editRenderLayerGlobals -q -currentRenderLayer`;
+	
+	//setup prefix dialog
+	string $heroName;
+	string $result = `promptDialog
+							-title "Prefix Render Layer"
+							-message "Enter prefix:"
+							-button "OK"
+							-button "Cancel"
+							-defaultButton "OK"
+							-cancelButton "Cancel"
+							-dismissString "Cancel"`;
+							
+	if ($result == "OK"){
+		$heroName = `promptDialog -query`;
+		//createRenderLayer -g -n $heroName;
+		
+		//add render layers to string array
+		string $layers[] = `ls -type "renderLayer"`;
+	
+		string $layersSize = size ($layers);
+	
+		if ($layersSize == 1){
+			error "no render layers found";
+		}
+
+		//loop through the layers bypassing the master layer
+		for ($i = 0; $i < size ($layers); $i++){
+			if ($layers[$i] == "defaultRenderLayer"){
+				print "masterLayer found.\r" ;
+			}
+			else{ 
+				rename $layers[$i] ($heroName + "_" + $layers[$i]) ;
+			}
+		}
+				
+		//V2.0 Edit
+		editRenderLayerGlobals -currentRenderLayer $userCurrentLayer;
+		//V2.0 End Edit
+		
+		print "Prefix added successfully.\r";
+	}	
+}

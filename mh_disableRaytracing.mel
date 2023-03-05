@@ -1,0 +1,37 @@
+/**********************************************************************************************
+Procedure: mh_disableRaytracing()
+Version: 2.0
+Date: 05-07-09
+Description: This procedure will take the selected objects and turn off visible in Reflections
+and visible in Refractions.
+**********************************************************************************************/
+
+
+global proc mh_disableRaytracing()
+{		
+	string $userSelection[] = `ls -sl`;
+		
+	//initialize the shape variable
+	string $shapes[];
+		
+	//declare the variable with the user selection
+	$shapes = $userSelection;
+		
+	//this statement will populate the shapes variable with the shapes of the transforms
+	//V2.0 edit the IF statement was causing error with many objects selected.  
+	$shapes = `listRelatives -fullPath -shapes $userSelection`;
+  		
+  	//apply the white shader to all shading groups
+  	for ($i = 0; $i < size ($shapes); $i++){
+	  	setAttr ($shapes[$i] + ".visibleInReflections") 0 ; 
+	  	setAttr ($shapes[$i] + ".visibleInRefractions") 0 ; 
+		}
+
+	//just in case replace the initial selection
+	select -replace $userSelection;
+		
+	print "Disabled \"Visible in Reflection/Refraction\" for selected objects.\r";
+				
+}
+	
+	

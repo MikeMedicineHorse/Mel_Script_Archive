@@ -1,0 +1,123 @@
+/**********************************************************************************************
+Procedure: mh_medHotkey()
+Version: 1.0
+Date: 05-08-09
+Description: This procedure will setup hotkeys for the med menu
+**********************************************************************************************/
+
+global proc mh_medHotkey()
+{
+	nameCommand 
+		-annotation "smartGroup" 
+		-command "mh_smartGroup"
+		mh_smartGroup ;
+	
+	if ((`hotkey -query -ctl "G"`) == 0 ){
+		hotkey -k "G" -ctl -name "mh_smartGroup" ;
+	}else{
+		print "Control + Shift + \"G\" already assigned to another command.\r" ;
+	}
+	
+	nameCommand 
+		-annotation "fix Maya group pivot" 
+		-command "mh_fixGroupPivot"
+		mh_fixGroupPivot ;
+	
+	if ((`hotkey -query -alt "G"`) == 0 ){
+		hotkey -k "G" -alt -name "mh_fixGroupPivot" ;
+	}else{
+		print "Alt + Shift + \"G\" already assigned to another command.\r" ;
+	}
+	
+	nameCommand 
+		-annotation "Center to object" 
+		-command "mh_centerToObject"
+		mh_centerToObject ;
+	
+	if ((`hotkey -query -alt "C"`) == 0 ){
+		hotkey -k "C" -alt -name "mh_centerToObject" ;
+	}else{
+		print "Alt + Shift + \"C\" already assigned to another command.\r" ;
+	}
+	
+	nameCommand 
+		-annotation "Select connected components" 
+		-command "mh_selectConnected"
+		mh_selectConnected ;
+	
+	if ((`hotkey -query -ctl "]"`) == 0 ){
+		hotkey -k "]" -ctl -name "mh_selectConnected" ;
+	}else{
+		print "Control + \"]\" already assigned to another command.\r" ;
+	}
+	
+	nameCommand 
+		-annotation "Random Object Rotation" 
+		-command "mh_randRotation"
+		mh_randRotation ;
+	
+	if ((`hotkey -query -alt "R"`) == 0 ){
+		hotkey -k "R" -alt -name "mh_randRotation" ;
+	}else{
+		print "Shift + Alt +  \"R\" already assigned to another command.\r" ;
+	}
+	
+	nameCommand 
+		-annotation "Toggle the resolution gate" 
+		-command "mh_resolutionGate"
+		mh_resolutionGate ;
+	
+	if ((`hotkey -query -ctl "R"`) == 0 ){
+		hotkey -k "R" -ctl -name "mh_resolutionGate" ;
+	}else{
+		print "Control + Shift +  \"R\" already assigned to another command.\r" ;
+	}
+	
+	print "Hotkey setup complete. See script editor for details.\r" ;
+	
+	nameCommand 
+		-annotation "Select SG Components" 
+		-command "mh_selectSG"
+		mh_selectSG ;
+	
+	if ((`hotkey -query -ctl "S"`) == 0 ){
+		hotkey -k "S" -ctl -name "mh_selectSG" ;
+	}else{
+		print "Control + Shift +  \"S\" already assigned to another command.\r" ;
+	}
+	
+	print "Hotkey setup complete. See script editor for details.\r" ;
+	
+	nameCommand 
+		-annotation "Select SG Material" 
+		-command "mh_selectMatSG"
+		mh_selectMatSG ;
+	
+	if ((`hotkey -query -ctl "S"`) == 0 ){
+		hotkey -k "A" -ctl -name "mh_selectMatSG" ;
+	}else{
+		print "Control + Shift +  \"A\" already assigned to another command.\r" ;
+	}
+	
+	print "Hotkey setup complete. See script editor for details.\r" ;
+		
+}
+		
+
+	 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

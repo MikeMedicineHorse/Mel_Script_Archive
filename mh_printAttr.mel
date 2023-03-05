@@ -1,0 +1,21 @@
+/**********************************************************************************************
+Procedure: mh_printAttr()
+Version:1.5
+Date: 10-20-08
+Description: This procedure will print the attributes of a selected node to the script history window.
+**********************************************************************************************/
+
+global proc mh_printAttr()
+{	
+	string $selected[] = `ls -sl`;
+	if ($selected[0] == "")
+	{
+		warning "Please select one node and try again";
+	}else
+	{
+	string $globals[] = `listAttr $selected`;
+	$globals = `sort $globals`;
+	print $globals;
+    }
+	
+}

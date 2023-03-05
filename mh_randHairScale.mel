@@ -1,0 +1,32 @@
+/**********************************************************************************************
+Procedure: mh_randHairScale()
+Version: 1.0
+Date: 03-10-10
+Description: This procedure takes the selected follicles and scales them.
+The procedure takes 2 arguments for the scale range min and max.  
+
+Example syntax: 
+
+mh_mh_randHairScale(1, 3)
+
+returns a random scale between 1 and 3.
+
+**********************************************************************************************/
+
+
+global proc mh_randHairScale(float $min, float $max)
+{
+	string $userSelection[] = `ls -sl`;
+	
+	//turn off shape code as we are dealing with transforms only
+	//string $shapes[];
+	//$shapes = $userSelection;
+	//$shapes = `listRelatives -shapes $userSelection`;
+
+	for ($i = 0; $i < size ($userSelection); $i++){
+		$randomScale = `rand $min $max` ; 
+	  	setAttr ($userSelection[$i] + ".scaleX") $randomScale ;
+	  	setAttr ($userSelection[$i] + ".scaleY") $randomScale ;
+		setAttr ($userSelection[$i] + ".scaleZ") $randomScale ;
+	}
+}

@@ -1,0 +1,37 @@
+/**********************************************************************************************
+Procedure: mh_selectAnimAndConstraints
+Version: 1.0
+Date: 05-11-16
+Description: This procedure selects all nodes that have keys.
+**********************************************************************************************/
+
+
+global proc mh_selectAnimConstraints()
+{	
+
+	
+	//wipe the selection to prepare for animation filtering
+	select -cl ;
+	
+
+	
+	//add in the constraint objects
+	string $cons[] = `ls -type "constraint"`;
+	
+	for ( $con in $cons ){
+    	string $targetAttrString = ( $con+ "" );
+    	string $connections[] = `listConnections $targetAttrString`;
+    	string $connectionsFlattened[] = stringArrayRemoveDuplicates($connections);
+		for ( $f in $connectionsFlattened )
+        	if ( $f != $con )
+            //print ( $f+ " is a target\n" );
+            select -add $f;
+		}
+		
+
+					
+}
+	
+
+	
+	

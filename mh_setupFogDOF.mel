@@ -1,0 +1,112 @@
+/**********************************************************************************************
+Procedure: mh_setupRearDOFlayer()
+Date: 01-23-09
+Description: This procedure will setup the rear DOF layer
+**********************************************************************************************/
+
+global proc mh_setupFogDOF()
+{
+	//store the user selection to restore later
+	string $userSelection[] = `ls -sl`;
+	
+	//store all the cameras--can't remember why
+	string $allCameras[] = `ls -ca`;
+	
+	//V2.0 Edit
+	//Retain current layer for animator
+	string $userCurrentLayer = `editRenderLayerGlobals -q -currentRenderLayer`;
+	//V2.0 end
+	
+	//create layer with -global flag which adds all objects--even future ones
+	createRenderLayer -g -n fogDOF;
+		
+	//add the reardof render name as an override**removed due to /renderlayer/renderlayer trick
+	editRenderLayerGlobals -currentRenderLayer fogDOF;
+	//editRenderLayerAdjustment "defaultRenderGlobals.imageFilePrefix";
+	//setAttr -type "string" defaultRenderGlobals.imageFilePrefix "fogDOF";
+		
+	//apply the maya software renderer as an overide
+	editRenderLayerAdjustment "defaultRenderGlobals.currentRenderer";
+	string $renderer = "mayaSoftware" ;
+	setAttr "defaultRenderGlobals.currentRenderer" -type "string" $renderer ;
+		
+	//turn on High Quality
+	setAttr defaultRenderQuality.edgeAntiAliasing 1;
+		
+	//set filter to off
+	setAttr "defaultRenderQuality.useMultiPixelFilter" 0;
+		
+	//apply production quality settings
+	setAttr "defaultRenderQuality.shadingSamples" 1;
+	setAttr "defaultRenderQuality.maxShadingSamples" 1;
+	setAttr "defaultRenderQuality.redThreshold" 0.4;
+	setAttr "defaultRenderQuality.greenThreshold" 0.3;
+	setAttr "defaultRenderQuality.blueThreshold" 0.6;
+		
+	//V2.0 EDIT here
+	for ($i = 0; $i < size ($allCameras); $i++){
+		editRenderLayerAdjustment ($allCameras[$i] + ".backgroundColor");
+		setAttr ($allCameras[$i] + ".backgroundColor") -type double3 1 1 1 ;
+		}		
+	//END V2.0 EDIT
+		
+	//Turn on render all layers from the layering menu
+	optionVar -intValue renderViewRenderAllLayers 1;
+	
+	//Turn renderlayer options to "keep layers"
+	optionVar -intValue renderViewRenderLayersMode 2;	
+	
+	//create the fog black shader		
+	$fogBlackShader = `shadingNode -asShader surfaceShader -n fogBlackShader_00` ;
+	string $surfaceShadingGroup = ($fogBlackShader + "SG");
+	sets -renderable true -noSurfaceShader true -empty -name ($surfaceShadingGroup);
+	connectAttr -f ($fogBlackShader + ".outColor") ($surfaceShadingGroup + ".surfaceShader");
+
+	//apply fog black shader as override
+	string $curRLayer = `editRenderLayerGlobals -q -currentRenderLayer`;
+	hookShaderOverride($curRLayer, "", $fogBlackShader);
+	
+	//assign environment fog through the maya software renderer
+	//defaultNavigation -createNew -destination "defaultRenderGlobals.fogGeometry";
+	//createNewOverride("defaultRenderGlobals.fogGeometry", true);
+	
+	// create environmentFogShape1 // 
+	createNode environmentFog;
+
+	setAttr environmentFogShape1.renderType 1;
+	connectAttr environmentFogShape1.message defaultRenderGlobals.fogGeometry;
+	//defaultNavigation -dtv -d defaultRenderGlobals.fogGeometry;
+	
+	// Connect environmentFogShape1.message to defaultRenderGlobals.fogGeometry. // 
+	//defaultNavigation -dtv -d defaultRenderGlobals.fogGeometry;
+	
+	// envFogSE // 
+	sets -n "envFogSE" -renderable 1 environmentFogShape1;
+	
+	lightlink -break -light "defaultLightSet" -object "envFogSE";
+	// Disconnect lambert1.outColor from envFogSEsurfaceShader. // 
+	disconnectAttr lambert1.outColor envFogSE.surfaceShader;
+	
+	shadingNode -asLight ambientLight -p environmentFog1 -n "envFogLight";
+	sets -rm "defaultLightSet" "environmentFog1";
+	lightlink -make -o envFogSE -l envFogLight;
+	setAttr envFogLight.ambientShade 0;
+	shadingNode -asShader envFog -n "envFogMaterial";
+	connectAttr -f envFogMaterial.outColor envFogSE.volumeShader;
+	//defaultNavigation -defaultTraversal -destination "defaultRenderGlobals.fogGeometry";
+		
+	//replace the user selection for good form
+	select -replace $userSelection;
+	
+	//select masterLayer for turning off volume shaders in MR
+	editRenderLayerGlobals -currentRenderLayer defaultRenderLayer ;
+	setAttr "miDefaultOptions.volumeShaders" 0;
+		
+	//V2.0 Edit
+	editRenderLayerGlobals -currentRenderLayer $userCurrentLayer;
+	//V2.0 End Edit
+		
+	print "fogDOF pass created successfully!\r";		
+}
+
+

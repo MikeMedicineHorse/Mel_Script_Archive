@@ -1,0 +1,58 @@
+/**********************************************************************************************
+Procedure: mh_centerAxisSelection()
+Version: 1.0
+Date: 05-11-09
+Description: This procedure moves the rotate pivot to the center of the component selection
+**********************************************************************************************/
+
+
+global proc mh_centerAxisSelection()
+{
+	//user selection of components
+	string $userSelection[] = `ls -sl` ;
+	
+	//query the first component of the selection array
+	string $node = $userSelection[0] ;
+	
+	//strip off the number junk leaving just the object
+	string $justShape = `match "^[^\.]*" $node`;
+
+	//store the converted vertex selection
+	$vertexConvert = `polyListComponentConversion -ff -fe -fuv -fvf -tv` ;
+	
+	if ((`size $vertexConvert`) == 0){
+		$vertexConvert = $userSelection ;
+	}
+
+	//select the verts
+	select -r $vertexConvert ;
+
+	//make a cluster out of the selected verts
+	$tempCluster = `newCluster " -envelope 1"` ;
+	
+	//make a temp group to alight the rotate pivot to
+	$tempGroup = `group -em ` ; 
+	
+	//select the objects to make a constraint
+	select -r $tempCluster ;
+	select -add $tempGroup ;
+	
+	//create the constraints to snap the object's position and rotation
+	string $pointConst[] = `pointConstraint -offset 0 0 0 -weight 1 -n pointConst_00` ;
+	string $orientConst[] = `orientConstraint -offset 0 0 0 -weight 1 -n orientConst_00` ;
+	
+	//delete the constraints
+	delete $pointConst ;
+	delete $orientConst ;
+	
+	$tempTranslate = `getAttr ($tempGroup + ".translate")` ;
+
+	//example code to move the rotate pivot of an object
+	move $tempTranslate[0] $tempTranslate[1] $tempTranslate[2] ($justShape + ".scalePivot") ($justShape + ".rotatePivot") ;
+	
+	delete $tempCluster ;
+	delete $tempGroup ;
+	
+	select -r $justShape ;
+
+}

@@ -1,0 +1,44 @@
+/**********************************************************************************************
+Procedure: mh_wildcardSel()
+Version: 1.1
+Date: 12-22-08
+Description: This procedure selects objects that contain the string entered into the prompt
+dialog.
+**********************************************************************************************/
+
+
+global proc mh_wildcardSel()
+{
+		
+	string $heroName;
+	string $result = `promptDialog
+							-title "MH WildCard Quickie"
+							-message "Look for objects containing this string:"
+							-button "OK"
+							-button "Cancel"
+							-defaultButton "OK"
+							-cancelButton "Cancel"
+							-dismissString "Cancel"`;
+							
+	if ($result == "OK"){
+		
+		
+		select -cl;
+		
+		$heroName = `promptDialog -query`;
+		select ("*" + $heroName + "*");
+		
+		string $wildcardSelection[] = `ls -sl`;
+		
+		if (size ($wildcardSelection)== 0){
+			print "No String Found";
+		}
+		else{
+			print "WildCard Objects Selected.\r";
+		}
+
+	}	
+			
+}
+	
+	
